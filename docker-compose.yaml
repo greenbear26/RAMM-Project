@@ -29,9 +29,9 @@ services:
     hostname: db
     volumes:
       - "./database-files:/docker-entrypoint-initdb.d/:ro"
-      - "mysql_data:/var/lib/mysql"
+      - "doc_mysql_data:/var/lib/mysql"
     ports:
       - 3200:3306
 
 volumes:
-  mysql_data:
+  doc_mysql_data:

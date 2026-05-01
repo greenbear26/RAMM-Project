@@ -13,7 +13,7 @@ simple_routes = Blueprint("simple_routes", __name__)
 @simple_routes.route("/")
 def welcome():
     current_app.logger.info("GET / handler")
-    return "<h1>Welcome to the CS 3200 Project Template REST API</h1>", 200
+    return "<h1>Welcome to the Summer 2026 DoC Project Template REST API</h1>", 200
 
 
 # ------------------------------------------------------------
