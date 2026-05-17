@@ -5,9 +5,11 @@ Your team's app is automatically deployed to the course's Coolify server wheneve
 ## URLs
 
 - **Your Streamlit app:** `https://team{N}.neu-in-leuven.cloud`
-- **Your Flask API:** `https://team{N}-api.neu-in-leuven.cloud`
+- **Your Flask API (optional, ask staff):** `https://team{N}-api.neu-in-leuven.cloud`
 
 Ask course staff for your specific team number if you don't know it yet.
+
+By default only the Streamlit app is publicly reachable. The Streamlit app talks to the Flask API through the internal Docker network, so you don't need a public API URL for the app to work. If you specifically want to hit your API from outside (e.g. with `curl` or Postman), ask staff to enable the API domain for your team.
 
 ## How it works
 
@@ -48,5 +50,6 @@ The values of `SECRET_KEY`, `MYSQL_ROOT_PASSWORD`, etc., live in Coolify's UI, n
 ## When things break
 
 1. Check the Coolify logs first (or ask staff to).
-2. The most common failure is an SQL syntax error in `database-files/*.sql` — those scripts run only on the first deploy (or after staff resets the database volume).
-3. The second most common is a Python dependency that's installed locally but missing from `requirements.txt`. If it works in `docker compose up` from a clean checkout, it'll work in production.
+2. The most common failure is an SQL syntax error in `database-files/*.sql` — those scripts run on **every** deploy (the database is reseeded from scratch each time), so a bad SQL file will block the whole stack until you fix it. Look at the `db` container logs for the offending line.
+3. The second most common is a Python dependency installed locally but missing from `requirements.txt`. If your app works from a *clean* `docker compose up` locally, it will work in production.
+4. The third: hard-coded paths or URLs that work locally but break under the production hostname. If something works locally and 404s in production, suspect a hard-coded `localhost` or `127.0.0.1` somewhere.
