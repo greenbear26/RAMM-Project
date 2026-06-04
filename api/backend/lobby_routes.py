@@ -1,48 +1,54 @@
+import logging
+logger = logging.getLogger(__name__)
+
 from flask import Blueprint, jsonify, request, current_app
 from backend.db_connection import get_db
 from backend.utils import error_response
 from mysql.connector import Error
-from ml.predict import predict_influence
 
 organizations_bp = Blueprint("organizations", __name__)
-policy_bp        = Blueprint("policy", __name__)
 countries_bp     = Blueprint("countries", __name__)
 users_bp         = Blueprint("users", __name__)
 ml_bp            = Blueprint("ml", __name__)
 
 
-
-# Route 1 — GET /organizations
-# Search / filter all organizations by policy area, country, or industry.
+# ROUTE 1 — GET /organizations
+# Search/filter all organizations from lobbyfacts data.
 @organizations_bp.route("/organizations", methods=["GET"])
 def get_all_organizations():
     current_app.logger.info("GET /organizations")
     try:
-        policy_area = request.args.get("policy_area")
-        country     = request.args.get("country")
-        industry    = request.args.get("industry")
+        country   = request.args.get("country")       # e.g. "Belgium"
+        interest  = request.args.get("interest")      # e.g. "commercial"
+        min_cost  = request.args.get("min_cost")      # e.g. "1000000"
+        max_cost  = request.args.get("max_cost")
+        limit     = int(request.args.get("limit", 50))
 
-       
-        query  = "SELECT * FROM organization WHERE 1=1"
+        # country_code stores full names (e.g. "Belgium") from Head office column
+        query  = """
+            SELECT org_id, name, members_fte, lobbying_cost,
+                   interest_represented, country_code, eu_office,
+                   ep_passes_current, ep_passes_all, meetings
+            FROM organization
+            WHERE 1=1
+        """
         params = []
 
-        if policy_area:
-            query += """
-                AND org_id IN (
-                    SELECT org_id FROM lobbying_activity la
-                    JOIN policy_area pa ON la.policy_area_id = pa.policy_area_id
-                    WHERE pa.name = %s
-                )"""
-            params.append(policy_area)
         if country:
             query += " AND country_code = %s"
             params.append(country)
-        if industry:
-            query += """
-                AND industry_id IN (
-                    SELECT industry_id FROM industry WHERE name = %s
-                )"""
-            params.append(industry)
+        if interest:
+            query += " AND interest_represented LIKE %s"
+            params.append(f"%{interest}%")
+        if min_cost:
+            query += " AND lobbying_cost >= %s"
+            params.append(float(min_cost))
+        if max_cost:
+            query += " AND lobbying_cost <= %s"
+            params.append(float(max_cost))
+
+        query += " ORDER BY lobbying_cost DESC LIMIT %s"
+        params.append(limit)
 
         with get_db().cursor(dictionary=True) as cursor:
             cursor.execute(query, params)
@@ -55,30 +61,41 @@ def get_all_organizations():
         return error_response(str(e))
 
 
-# Route 2 — GET /organizations/<org_id>
-# Full org profile: base info + lobbying activities + expenditures.
+# ROUTE 2 — GET /organizations/<org_id>
+# Full org profile — name, spend, meetings, EP passes, activities.
 @organizations_bp.route("/organizations/<int:org_id>", methods=["GET"])
 def get_organization(org_id):
     current_app.logger.info(f"GET /organizations/{org_id}")
     try:
         with get_db().cursor(dictionary=True) as cursor:
-            cursor.execute("SELECT * FROM organization WHERE org_id = %s", (org_id,))
+            cursor.execute(
+                """SELECT org_id, name, members_fte, lobbying_cost,
+                          interest_represented, country_code, eu_office,
+                          ep_passes_current, ep_passes_all, meetings
+                   FROM organization WHERE org_id = %s""",
+                (org_id,)
+            )
             org = cursor.fetchone()
-
             if not org:
                 return error_response("Organization not found", 404)
 
-            # Attach lobbying activities
+            # Attach expenditure history
             cursor.execute(
-                "SELECT * FROM lobbying_activity WHERE org_id = %s", (org_id,)
-            )
-            org["lobbying_activities"] = cursor.fetchall()
-
-            # Attach expenditure records
-            cursor.execute(
-                "SELECT * FROM expenditure_record WHERE org_id = %s", (org_id,)
+                "SELECT year, amount_eur FROM expenditure_record WHERE org_id = %s ORDER BY year DESC",
+                (org_id,)
             )
             org["expenditures"] = cursor.fetchall()
+
+            # Attach lobbying activities
+            cursor.execute(
+                """SELECT la.activity_type, la.eu_institution, la.start_date,
+                          pa.name AS policy_area
+                   FROM lobbying_activity la
+                   LEFT JOIN policy_area pa ON la.policy_area_id = pa.policy_area_id
+                   WHERE la.org_id = %s""",
+                (org_id,)
+            )
+            org["lobbying_activities"] = cursor.fetchall()
 
         return jsonify(org), 200
     except Error as e:
@@ -86,36 +103,37 @@ def get_organization(org_id):
         return error_response(str(e))
 
 
-# Route 3 — POST /organizations
-# Add a new organization.
-# Required fields: name, country_code, industry_id, lobbying_cost
+
+# ROUTE 3 — POST /organizations
+# Create a new organization (maps to lobbyfacts columns).
 @organizations_bp.route("/organizations", methods=["POST"])
 def create_organization():
     current_app.logger.info("POST /organizations")
     try:
         data = request.get_json()
 
-        required_fields = ["name", "country_code", "industry_id", "lobbying_cost"]
+        required_fields = ["name", "country_code", "lobbying_cost"]
         for field in required_fields:
             if field not in data:
                 return error_response(f"Missing required field: {field}", 400)
 
         query = """
             INSERT INTO organization
-                (name, lobbyfacts_url, members_eu, members_fte,
-                 lobbying_cost, interest_represented, country_code, industry_id)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                (name, members_fte, lobbying_cost, interest_represented,
+                 country_code, eu_office, ep_passes_current, ep_passes_all, meetings)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
         with get_db().cursor(dictionary=True) as cursor:
             cursor.execute(query, (
                 data["name"],
-                data.get("lobbyfacts_url"),
-                data.get("members_eu"),
                 data.get("members_fte"),
                 data["lobbying_cost"],
                 data.get("interest_represented"),
                 data["country_code"],
-                data["industry_id"],
+                data.get("eu_office"),
+                data.get("ep_passes_current"),
+                data.get("ep_passes_all"),
+                data.get("meetings"),
             ))
             new_id = cursor.lastrowid
 
@@ -127,9 +145,8 @@ def create_organization():
         return error_response(str(e))
 
 
-# Route 4 — PUT /organizations/<org_id>
-# Update any fields on an existing organization.
-# Example: PUT /organizations/42 with JSON body containing fields to update
+# ROUTE 4 — PUT /organizations/<org_id>
+# Update any lobbyfacts fields on an existing organization.
 @organizations_bp.route("/organizations/<int:org_id>", methods=["PUT"])
 def update_organization(org_id):
     current_app.logger.info(f"PUT /organizations/{org_id}")
@@ -137,8 +154,8 @@ def update_organization(org_id):
         data = request.get_json()
 
         allowed_fields = [
-            "name", "lobbyfacts_url", "members_eu", "members_fte",
-            "lobbying_cost", "interest_represented", "country_code", "industry_id"
+            "name", "members_fte", "lobbying_cost", "interest_represented",
+            "country_code", "eu_office", "ep_passes_current", "ep_passes_all", "meetings"
         ]
         update_fields = [f"{f} = %s" for f in allowed_fields if f in data]
         params        = [data[f] for f in allowed_fields if f in data]
@@ -152,8 +169,10 @@ def update_organization(org_id):
                 return error_response("Organization not found", 404)
 
             params.append(org_id)
-            query = f"UPDATE organization SET {', '.join(update_fields)} WHERE org_id = %s"
-            cursor.execute(query, params)
+            cursor.execute(
+                f"UPDATE organization SET {', '.join(update_fields)} WHERE org_id = %s",
+                params
+            )
 
         get_db().commit()
         return jsonify({"message": "Organization updated successfully"}), 200
@@ -162,9 +181,8 @@ def update_organization(org_id):
         return error_response(str(e))
 
 
-# Route 5 — DELETE /organizations/<org_id>
+# ROUTE 5 — DELETE /organizations/<org_id>
 # Remove an organization from the database.
-# Example: DELETE /organizations/42
 @organizations_bp.route("/organizations/<int:org_id>", methods=["DELETE"])
 def delete_organization(org_id):
     current_app.logger.info(f"DELETE /organizations/{org_id}")
@@ -173,7 +191,6 @@ def delete_organization(org_id):
             cursor.execute("SELECT org_id FROM organization WHERE org_id = %s", (org_id,))
             if not cursor.fetchone():
                 return error_response("Organization not found", 404)
-
             cursor.execute("DELETE FROM organization WHERE org_id = %s", (org_id,))
 
         get_db().commit()
@@ -184,56 +201,72 @@ def delete_organization(org_id):
         return error_response(str(e))
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# BLUEPRINT: policy
-# ─────────────────────────────────────────────────────────────────────────────
-
-# Route 6 — GET /policy-areas
-# Fetch all policy areas to populate the search dropdown.
-# Example: /policy-areas
-@policy_bp.route("/policy-areas", methods=["GET"])
-def get_policy_areas():
-    current_app.logger.info("GET /policy-areas")
+# ROUTE 6 — GET /organizations/top-spenders
+# Get top N orgs by lobbying_cost — used for Clouseau's rankings chart.
+@organizations_bp.route("/organizations/top-spenders", methods=["GET"])
+def get_top_spenders():
+    current_app.logger.info("GET /organizations/top-spenders")
     try:
-        with get_db().cursor(dictionary=True) as cursor:
-            cursor.execute("SELECT * FROM policy_area ORDER BY name ASC")
-            areas = cursor.fetchall()
+        country = request.args.get("country")
+        limit   = int(request.args.get("limit", 10))
 
-        current_app.logger.info(f"Retrieved {len(areas)} policy areas")
-        return jsonify(areas), 200
+        query  = """
+            SELECT org_id, name, lobbying_cost, country_code,
+                   interest_represented, meetings, ep_passes_all
+            FROM organization
+            WHERE lobbying_cost IS NOT NULL
+        """
+        params = []
+        if country:
+            query += " AND country_code = %s"
+            params.append(country)
+
+        query += " ORDER BY lobbying_cost DESC LIMIT %s"
+        params.append(limit)
+
+        with get_db().cursor(dictionary=True) as cursor:
+            cursor.execute(query, params)
+            orgs = cursor.fetchall()
+
+        return jsonify(orgs), 200
     except Error as e:
-        current_app.logger.error(f"Database error in get_policy_areas: {e}")
+        current_app.logger.error(f"Database error in get_top_spenders: {e}")
         return error_response(str(e))
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# BLUEPRINT: countries
-# ─────────────────────────────────────────────────────────────────────────────
-
-# Route 7 — GET /country-indicators/<country_code>
-# Fetch GDP, population, and inflation for a given country (Clouseau detail cards).
-# Example: /country-indicators/DE
-@countries_bp.route("/country-indicators/<string:country_code>", methods=["GET"])
-def get_country_indicators(country_code):
-    current_app.logger.info(f"GET /country-indicators/{country_code}")
+# ROUTE 7 — GET /country-indicators/<country_name>
+# GDP, Fossil Fuels, CO2, Urban pop from World Bank data.
+@countries_bp.route("/country-indicators/<string:country_name>", methods=["GET"])
+def get_country_indicators(country_name):
+    current_app.logger.info(f"GET /country-indicators/{country_name}")
     try:
         with get_db().cursor(dictionary=True) as cursor:
-            # Confirm the country exists
+            # country_code stores full names (e.g. "Belgium") from GDP data
             cursor.execute(
-                "SELECT * FROM country WHERE country_code = %s", (country_code,)
+                "SELECT * FROM country WHERE country_code = %s", (country_name,)
             )
             country = cursor.fetchone()
             if not country:
-                return error_response("Country not found", 404)
+                return error_response(f"Country '{country_name}' not found", 404)
 
-            # Get the most recent indicator row for this country
+            # GDP_Energy_WBdat: year, gdp_usd, fossil_fuels, co2_emit, urban_pop
             cursor.execute(
-                """SELECT * FROM country_indicator
+                """SELECT year, gdp_usd, fossil_fuels, co2_emit, urban_pop
+                   FROM country_indicator
                    WHERE country_code = %s
                    ORDER BY year DESC""",
-                (country_code,)
+                (country_name,)
             )
             country["indicators"] = cursor.fetchall()
+
+            # Also return how many orgs are headquartered here
+            cursor.execute(
+                """SELECT COUNT(*) AS org_count,
+                          SUM(lobbying_cost) AS total_lobbying_spend
+                   FROM organization WHERE country_code = %s""",
+                (country_name,)
+            )
+            country["lobbying_summary"] = cursor.fetchone()
 
         return jsonify(country), 200
     except Error as e:
@@ -241,13 +274,8 @@ def get_country_indicators(country_code):
         return error_response(str(e))
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# BLUEPRINT: users
-# ─────────────────────────────────────────────────────────────────────────────
-
-# Route 8 — GET /preferences
-# Get the current user's saved policy + country preferences (Stromae feed).
-# Example: /preferences?user_id=7
+# ROUTE 8 — GET /preferences
+# Get Stromae's saved policy + country preferences.
 @users_bp.route("/preferences", methods=["GET"])
 def get_preferences():
     current_app.logger.info("GET /preferences")
@@ -258,38 +286,36 @@ def get_preferences():
 
         with get_db().cursor(dictionary=True) as cursor:
             cursor.execute(
-                "SELECT * FROM app_user WHERE user_id = %s", (user_id,)
+                "SELECT user_id, email, role FROM app_user WHERE user_id = %s",
+                (user_id,)
             )
             user = cursor.fetchone()
             if not user:
                 return error_response("User not found", 404)
 
-            # Return saved queries / preferences for this user
             cursor.execute(
-                "SELECT * FROM saved_query_export WHERE user_id = %s ORDER BY created_at DESC",
+                """SELECT export_id, query_json, file_format, created_at
+                   FROM saved_query_export
+                   WHERE user_id = %s ORDER BY created_at DESC""",
                 (user_id,)
             )
             user["saved_queries"] = cursor.fetchall()
 
-        # Don't return password hash to the client
-        user.pop("password_hash", None)
         return jsonify(user), 200
     except Error as e:
         current_app.logger.error(f"Database error in get_preferences: {e}")
         return error_response(str(e))
 
 
-# Route 9 — POST /preferences
-# Submit onboarding preferences — policy areas & countries (Stromae onboarding).
-# Required fields: user_id, query_json
+# ROUTE 9 — POST /preferences
+# Save Stromae's onboarding preferences (policies + countries).
 @users_bp.route("/preferences", methods=["POST"])
 def save_preferences():
     current_app.logger.info("POST /preferences")
     try:
         data = request.get_json()
 
-        required_fields = ["user_id", "query_json"]
-        for field in required_fields:
+        for field in ["user_id", "query_json"]:
             if field not in data:
                 return error_response(f"Missing required field: {field}", 400)
 
@@ -315,27 +341,30 @@ def save_preferences():
         return error_response(str(e))
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# BLUEPRINT: ml
-# ─────────────────────────────────────────────────────────────────────────────
-
-# Route 10 — POST /organizations/<org_id>/influence-predictions
-# Run ML influence score prediction for a given org.
-# Loads stored model weights from the DB — does NOT retrain on every call.
-# Returns: influence_score (float) + influence_class (str) + top features
-# Example: POST /organizations/42/influence-predictions
-@ml_bp.route("/organizations/<int:org_id>/influence-predictions", methods=["POST"])
-def predict_org_influence(org_id):
-    current_app.logger.info(f"POST /organizations/{org_id}/influence-predictions")
+# ROUTE 10 — GET /organizations/<org_id>/influence-prediction
+# Run ML influence score for an org using lobbyfacts + World Bank features.
+@ml_bp.route("/organizations/<int:org_id>/influence-prediction", methods=["GET"])
+def get_influence_prediction(org_id):
+    current_app.logger.info(f"GET /organizations/{org_id}/influence-prediction")
     try:
         with get_db().cursor(dictionary=True) as cursor:
-            # Fetch the org's features needed by the model
+            # Fetch org features from lobbyfacts columns
+            # Join with most recent World Bank indicators for org's country
             cursor.execute(
-                """SELECT o.lobbying_cost, o.log_lobbying_cost, o.members_eu,
-                          o.members_fte, ci.gdp_usd, ci.inflation_rate
+                """SELECT
+                       o.org_id,
+                       o.name,
+                       o.lobbying_cost,
+                       o.members_fte,
+                       o.meetings,
+                       o.ep_passes_all,
+                       o.country_code,
+                       ci.gdp_usd,
+                       ci.fossil_fuels,
+                       ci.co2_emit
                    FROM organization o
                    LEFT JOIN country_indicator ci
-                          ON o.country_code = ci.country_code
+                       ON o.country_code = ci.country_code
                    WHERE o.org_id = %s
                    ORDER BY ci.year DESC
                    LIMIT 1""",
@@ -345,18 +374,23 @@ def predict_org_influence(org_id):
             if not org_features:
                 return error_response("Organization not found", 404)
 
-            # Load the active model weights from the DB (train once, reuse every call)
+            # Load active model weights — train once, reuse every call
             cursor.execute(
-                "SELECT * FROM ml_model_weights WHERE is_active = TRUE ORDER BY trained_at DESC LIMIT 1"
+                """SELECT model_id, model_version, weights_json, features_json,
+                          train_r2, test_r2
+                   FROM ml_model_weights
+                   WHERE is_active = TRUE
+                   ORDER BY trained_at DESC LIMIT 1"""
             )
             model_row = cursor.fetchone()
             if not model_row:
-                return error_response("No active ML model found. Please train a model first.", 503)
+                return error_response("No active ML model found. Train a model first.", 503)
 
-        # Run prediction using stored weights — no retraining
+        # Call DS teammate's predict function
+        from ml.predict import predict_influence
         result = predict_influence(org_features, model_row["weights_json"])
 
-        # Persist prediction result for future GET lookups
+        # Store prediction for future chart lookups
         with get_db().cursor(dictionary=True) as cursor:
             cursor.execute(
                 """INSERT INTO influence_prediction
@@ -374,10 +408,16 @@ def predict_org_influence(org_id):
         get_db().commit()
 
         current_app.logger.info(
-            f"Influence prediction for org_id={org_id}: score={result['influence_score']}"
+            f"Prediction for org_id={org_id} ({org_features['name']}): "
+            f"score={result['influence_score']}"
         )
         return jsonify({
             "org_id":          org_id,
+            "org_name":        org_features["name"],
+            "country":         org_features["country_code"],
+            "lobbying_cost":   org_features["lobbying_cost"],
+            "meetings":        org_features["meetings"],
+            "ep_passes_all":   org_features["ep_passes_all"],
             "influence_score": result["influence_score"],
             "influence_class": result["influence_class"],
             "top_features":    result["top_features"],
@@ -385,5 +425,5 @@ def predict_org_influence(org_id):
         }), 200
 
     except Error as e:
-        current_app.logger.error(f"Database error in predict_org_influence: {e}")
+        current_app.logger.error(f"Database error in get_influence_prediction: {e}")
         return error_response(str(e))
