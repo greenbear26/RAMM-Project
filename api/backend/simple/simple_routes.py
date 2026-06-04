@@ -1,6 +1,6 @@
-from flask import Blueprint, jsonify, current_app, redirect, url_for
+from flask import Blueprint, jsonify, current_app, redirect, request, url_for
 from backend.simple.playlist import sample_playlist_data
-from backend.ml_models import model01, model02
+from backend.ml_models import lobby_model, model01, model02
 
 # This blueprint handles basic routes useful for testing and demonstration
 simple_routes = Blueprint("simple_routes", __name__)
@@ -118,3 +118,49 @@ def get_model2_observations():
     except Exception as e:
         current_app.logger.error(f"model02 observations error: {e}")
         return jsonify({"error": "Error fetching observations"}), 500
+
+
+# ------------------------------------------------------------
+# lobby_model — full prediction endpoint
+# URL:  POST /lobby/prediction
+#
+# Accepts JSON payload with lobbying_cost, ep_passes, members_fte,
+# country, and interest, then returns the model prediction.
+# ------------------------------------------------------------
+@simple_routes.route("/lobby/prediction", methods=["POST"])
+def get_lobby_prediction():
+    current_app.logger.info("POST /lobby/prediction handler")
+    try:
+        data = request.get_json(silent=True) or {}
+
+        required_fields = ["lobbying_cost", "ep_passes", "members_fte", "country", "interest"]
+        missing_fields = [field for field in required_fields if field not in data]
+        if missing_fields:
+            return jsonify({"error": f"Missing required fields: {', '.join(missing_fields)}"}), 400
+
+        prediction = lobby_model.predict(
+            data["lobbying_cost"],
+            data["ep_passes"],
+            data["members_fte"],
+            data["country"],
+            data["interest"],
+        )
+
+        current_app.logger.info(f"lobby prediction returned {prediction:.2f}")
+        return jsonify({
+            "prediction": round(prediction, 2),
+            "input_variables": {
+                "lobbying_cost": float(data["lobbying_cost"]),
+                "ep_passes": float(data["ep_passes"]),
+                "members_fte": float(data["members_fte"]),
+                "country": data["country"],
+                "interest": data["interest"],
+            },
+        }), 200
+
+    except ValueError as e:
+        current_app.logger.error(f"lobby prediction input error: {e}")
+        return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        current_app.logger.error(f"lobby prediction error: {e}")
+        return jsonify({"error": "Error processing prediction request"}), 500
