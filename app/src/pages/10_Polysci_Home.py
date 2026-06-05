@@ -20,19 +20,9 @@ if st.button('View NGO Directory',
 if st.button('Add New NGO',
              type='primary',
              use_container_width=True):
-    st.switch_page('pages/15_Add_NGO.py')
+    st.switch_page('pages/15_Add_Org.py')
 
 if st.button('Predict Value Based on Regression Model',
              type='primary',
              use_container_width=True):
     st.switch_page('pages/11_Prediction.py')
-
-if st.button('View the Simple API Demo',
-             type='primary',
-             use_container_width=True):
-    st.switch_page('pages/12_API_Test.py')
-
-if st.button('View Classification Demo',
-             type='primary',
-             use_container_width=True):
-    st.switch_page('pages/13_Classification.py')

@@ -11,13 +11,10 @@ st.set_page_config(layout='wide')
 SideBarLinks()
 
 # set up the page
-st.markdown("# Mapping Demo")
-st.sidebar.header("Mapping Demo")
-st.write(
-    """This Mapping Demo is from the Streamlit Documentation. It shows how to use
-[`st.pydeck_chart`](https://docs.streamlit.io/library/api-reference/charts/st.pydeck_chart)
-to display geospatial data."""
-)
+st.markdown("# Mapping Lobby Group Locations ")
+st.sidebar.header("Mapping Lobby Groups")
+
+st.write("TODO: Need to use to locations properly in the map. Not functional yet")
 
 
 @st.cache_data
