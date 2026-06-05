@@ -13,8 +13,18 @@ users_bp         = Blueprint("users", __name__)
 ml_bp            = Blueprint("ml", __name__)
 
 
-# ROUTE 1 — GET /organizations
-# Search/filter all organizations from lobbyfacts data.
+# test route:
+@organizations_bp.route("/test", methods=["GET"])
+def test_route():
+    current_app.logger.info("GET /test")
+    query = "select country from country_indicator;"
+    with get_db().cursor(dictionary=True) as cursor:
+        cursor.execute(query)
+        countries = cursor.fetchall()
+    return jsonify(countries), 200
+
+# Route 1 — GET /organizations
+# Search / filter all organizations by policy area, country, or industry.
 @organizations_bp.route("/organizations", methods=["GET"])
 def get_all_organizations():
     current_app.logger.info("GET /organizations")
@@ -104,9 +114,8 @@ def get_organization(org_id):
         return error_response(str(e))
 
 
-
-# ROUTE 3 — POST /organizations
-# Create a new organization (maps to lobbyfacts columns).
+# Route 3 — POST /organizations
+# Add a new organization.
 @organizations_bp.route("/organizations", methods=["POST"])
 def create_organization():
     current_app.logger.info("POST /organizations")
@@ -146,8 +155,8 @@ def create_organization():
         return error_response(str(e))
 
 
-# ROUTE 4 — PUT /organizations/<org_id>
-# Update any lobbyfacts fields on an existing organization.
+# Route 4 — PUT /organizations/<org_id>
+# Update any fields on an existing organization.
 @organizations_bp.route("/organizations/<int:org_id>", methods=["PUT"])
 def update_organization(org_id):
     current_app.logger.info(f"PUT /organizations/{org_id}")
@@ -202,11 +211,12 @@ def delete_organization(org_id):
         return error_response(str(e))
 
 
-# ROUTE 6 — GET /organizations/top-spenders
-# Get top N orgs by lobbying_cost — used for Clouseau's rankings chart.
-@organizations_bp.route("/organizations/top-spenders", methods=["GET"])
-def get_top_spenders():
-    current_app.logger.info("GET /organizations/top-spenders")
+
+# Route 6 — GET /policy-areas
+# Fetch all policy areas to populate the search dropdown.
+@organizations_bp.route("/policy-areas", methods=["GET"])
+def get_policy_areas():
+    current_app.logger.info("GET /policy-areas")
     try:
         country = request.args.get("country")
         limit   = int(request.args.get("limit", 10))
@@ -235,11 +245,12 @@ def get_top_spenders():
         return error_response(str(e))
 
 
-# ROUTE 7 — GET /country-indicators/<country_name>
-# GDP, Fossil Fuels, CO2, Urban pop from World Bank data.
-@countries_bp.route("/country-indicators/<string:country_name>", methods=["GET"])
-def get_country_indicators(country_name):
-    current_app.logger.info(f"GET /country-indicators/{country_name}")
+
+# Route 7 — GET /country-indicators/<country_code>
+# Fetch GDP, population, and inflation for a given country (Clouseau detail cards).
+@countries_bp.route("/country-indicators/<string:country_code>", methods=["GET"])
+def get_country_indicators(country_code):
+    current_app.logger.info(f"GET /country-indicators/{country_code}")
     try:
         with get_db().cursor(dictionary=True) as cursor:
             # country_code stores full names (e.g. "Belgium") from GDP data
@@ -275,8 +286,8 @@ def get_country_indicators(country_name):
         return error_response(str(e))
 
 
-# ROUTE 8 — GET /preferences
-# Get Stromae's saved policy + country preferences.
+# Route 8 — GET /preferences
+# Get the current user's saved policy + country preferences (Stromae feed).
 @users_bp.route("/preferences", methods=["GET"])
 def get_preferences():
     current_app.logger.info("GET /preferences")
@@ -308,8 +319,8 @@ def get_preferences():
         return error_response(str(e))
 
 
-# ROUTE 9 — POST /preferences
-# Save Stromae's onboarding preferences (policies + countries).
+# Route 9 — POST /preferences
+# Submit onboarding preferences — policy areas & countries (Stromae onboarding).
 @users_bp.route("/preferences", methods=["POST"])
 def save_preferences():
     current_app.logger.info("POST /preferences")
@@ -341,10 +352,6 @@ def save_preferences():
         current_app.logger.error(f"Database error in save_preferences: {e}")
         return error_response(str(e))
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-# BLUEPRINT: ml
-# ─────────────────────────────────────────────────────────────────────────────
 
 
 # Route 10 — POST /lobby/prediction
@@ -387,3 +394,7 @@ def get_lobby_prediction():
         current_app.logger.error(f"lobby prediction error: {e}")
         return jsonify({"error": "Error processing prediction request"}), 500
 
+def main():
+    print(test_route())
+if __name__ == "__main__":
+    main()
