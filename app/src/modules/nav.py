@@ -15,7 +15,7 @@ def about_page_nav():
     st.sidebar.page_link("pages/30_About.py", label="About", icon="🧠")
 
 
-# ---- Role: pol_strat_advisor ------------------------------------------------
+# ---- Role: Citizen ------------------------------------------------
 
 def pol_strat_home_nav():
     st.sidebar.page_link(
@@ -33,7 +33,7 @@ def map_demo_nav():
     st.sidebar.page_link("pages/02_Explore.py", label="Explore Page", icon="🔎️")
 
 
-# ---- Role: usaid_worker -----------------------------------------------------
+# ---- Role: Poly-Sci Researcher -----------------------------------------------------
 
 def usaid_worker_home_nav():
     st.sidebar.page_link(
@@ -65,10 +65,10 @@ def classification_nav():
     )
 
 
-# ---- Role: administrator ----------------------------------------------------
+# ---- Role: Political Journalist ----------------------------------------------------
 
-def admin_home_nav():
-    st.sidebar.page_link("pages/20_Admin_Home.py", label="System Admin", icon="🖥️")
+def journalist_home_nav():
+    st.sidebar.page_link("pages/20_Journalist_Home.py", label="Journalist Home", icon="🖥️")
 
 
 def ml_model_mgmt_nav():
@@ -112,13 +112,13 @@ def SideBarLinks(show_home=False):
             ngo_directory_nav()
             add_ngo_nav()
             prediction_nav()
-            api_test_nav()
-            classification_nav()
+            # api_test_nav()
+            # classification_nav()
 
         if st.session_state["role"] == "administrator":
-            admin_home_nav()
-            ml_model_mgmt_nav()
-            new_ml_model_nav()
+            journalist_home_nav()
+            # ml_model_mgmt_nav()
+            # new_ml_model_nav()
             
     # About link appears at the bottom for all roles
     about_page_nav()
