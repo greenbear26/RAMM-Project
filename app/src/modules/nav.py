@@ -30,7 +30,7 @@ def world_bank_viz_nav():
 
 
 def map_demo_nav():
-    st.sidebar.page_link("pages/02_Map_Demo.py", label="Map Demonstration", icon="🗺️")
+    st.sidebar.page_link("pages/02_Explore.py", label="Explore Page", icon="🔎️")
 
 
 # ---- Role: usaid_worker -----------------------------------------------------
