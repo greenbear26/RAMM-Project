@@ -3,6 +3,8 @@ logger = logging.getLogger(__name__)
 
 import streamlit as st
 import requests
+import pandas as pd
+from pathlib import Path
 from modules.nav import SideBarLinks
 
 st.set_page_config(layout='wide')
@@ -20,90 +22,116 @@ if "selected_countries" not in st.session_state:
     st.session_state.selected_countries = []
 
 POLICIES = [
-    {"name": "Artificial Intelligence", "emoji": "🤖"},
-    {"name": "Climate & Energy",        "emoji": "🌱"},
-    {"name": "Healthcare",              "emoji": "🏥"},
-    {"name": "Defence & Security",      "emoji": "🛡️"},
-    {"name": "Finance & Banking",       "emoji": "🏦"},
-    {"name": "Agriculture",             "emoji": "🌾"},
-    {"name": "Digital Markets",         "emoji": "📱"},
-    {"name": "Transport",               "emoji": "🚄"},
+    "Artificial Intelligence", "Climate & Energy", "Healthcare",
+    "Defence & Security", "Finance & Banking", "Agriculture",
+    "Digital Markets", "Transport",
 ]
 
 COUNTRIES = [
-    {"name": "Austria",        "emoji": "🇦🇹"},
-    {"name": "Belgium",        "emoji": "🇧🇪"},
-    {"name": "Bulgaria",       "emoji": "🇧🇬"},
-    {"name": "Croatia",        "emoji": "🇭🇷"},
-    {"name": "Cyprus",         "emoji": "🇨🇾"},
-    {"name": "Czech Republic", "emoji": "🇨🇿"},
-    {"name": "Denmark",        "emoji": "🇩🇰"},
-    {"name": "Estonia",        "emoji": "🇪🇪"},
-    {"name": "Finland",        "emoji": "🇫🇮"},
-    {"name": "France",         "emoji": "🇫🇷"},
-    {"name": "Germany",        "emoji": "🇩🇪"},
-    {"name": "Greece",         "emoji": "🇬🇷"},
-    {"name": "Hungary",        "emoji": "🇭🇺"},
-    {"name": "Ireland",        "emoji": "🇮🇪"},
-    {"name": "Italy",          "emoji": "🇮🇹"},
-    {"name": "Latvia",         "emoji": "🇱🇻"},
-    {"name": "Lithuania",      "emoji": "🇱🇹"},
-    {"name": "Luxembourg",     "emoji": "🇱🇺"},
-    {"name": "Malta",          "emoji": "🇲🇹"},
-    {"name": "Netherlands",    "emoji": "🇳🇱"},
-    {"name": "Poland",         "emoji": "🇵🇱"},
-    {"name": "Portugal",       "emoji": "🇵🇹"},
-    {"name": "Romania",        "emoji": "🇷🇴"},
-    {"name": "Slovakia",       "emoji": "🇸🇰"},
-    {"name": "Slovenia",       "emoji": "🇸🇮"},
-    {"name": "Spain",          "emoji": "🇪🇸"},
-    {"name": "Sweden",         "emoji": "🇸🇪"},
+    "Austria", "Belgium", "Bulgaria", "Croatia", "Cyprus",
+    "Czech Republic", "Denmark", "Estonia", "Finland", "France",
+    "Germany", "Greece", "Hungary", "Ireland", "Italy",
+    "Latvia", "Lithuania", "Luxembourg", "Malta", "Netherlands",
+    "Poland", "Portugal", "Romania", "Slovakia", "Slovenia",
+    "Spain", "Sweden",
 ]
 
-# Pick a Policy
+
+POLICY_KEYWORDS = {
+    "Artificial Intelligence": ["AI", "artificial intelligence", "digital", "technology", "software"],
+    "Climate & Energy":        ["climate", "energy", "environment", "green", "renewable", "emission"],
+    "Healthcare":              ["health", "pharma", "medical", "hospital", "medicine", "biotech"],
+    "Defence & Security":      ["defence", "defense", "security", "military", "nato"],
+    "Finance & Banking":       ["finance", "banking", "financial", "investment", "insurance", "capital"],
+    "Agriculture":             ["agriculture", "farming", "food", "rural", "crop", "livestock"],
+    "Digital Markets":         ["digital", "platform", "online", "internet", "e-commerce", "data"],
+    "Transport":               ["transport", "mobility", "aviation", "rail", "shipping", "logistics"],
+}
+
+# Load datasets 
+@st.cache_data
+def load_lobbyfacts():
+    df = pd.read_csv("/appcode/datasets/lobbying/lobbyfacts_cleaned.csv")
+    df = df.dropna(subset=["Name", "Lobbying cost", "Head office"])
+    return df
+
+@st.cache_data
+def load_worldbank():
+    df = pd.read_csv("/appcode/datasets/GDP_Energy_WBdat.csv")
+    return df
+
+lf_df = load_lobbyfacts()
+wb_df = load_worldbank()
+
+# Pick a Policy 
 st.markdown("### Pick a Policy")
+col1, col2 = st.columns([4, 1])
+with col1:
+    selected_policy = st.selectbox(
+        "Policy", ["-- Select --"] + POLICIES,
+        label_visibility="collapsed"
+    )
+with col2:
+    add_policy = st.button("Add", key="add_pol", use_container_width=True)
 
-pol_cols = st.columns(4)
-for i, policy in enumerate(POLICIES):
-    with pol_cols[i % 4]:
-        selected = policy["name"] in st.session_state.selected_policies
-        label = f"{'✅' if selected else '⬜'}  {policy['emoji']}  {policy['name']}"
-        if st.button(label, key=f"pol_{i}", use_container_width=True):
-            if policy["name"] in st.session_state.selected_policies:
-                st.session_state.selected_policies.remove(policy["name"])
-            else:
-                st.session_state.selected_policies.append(policy["name"])
+if add_policy and selected_policy != "-- Select --":
+    if selected_policy not in st.session_state.selected_policies:
+        st.session_state.selected_policies.append(selected_policy)
+        st.rerun()
+
+if st.session_state.selected_policies:
+    pc1, pc2 = st.columns([4, 1])
+    with pc1:
+        st.markdown("**Selected:** " + "  ".join(
+            [f"`{p}`" for p in st.session_state.selected_policies]
+        ))
+    with pc2:
+        if st.button("Clear", key="clear_pol", use_container_width=True):
+            st.session_state.selected_policies = []
             st.rerun()
 
 st.markdown("---")
 
-# Pick a Country 
+# Pick a Country
 st.markdown("### Pick a Country")
+col3, col4 = st.columns([4, 1])
+with col3:
+    selected_country = st.selectbox(
+        "Country", ["-- Select --"] + COUNTRIES,
+        label_visibility="collapsed"
+    )
+with col4:
+    add_country = st.button("Add", key="add_cty", use_container_width=True)
 
-cty_cols = st.columns(4)
-for i, country in enumerate(COUNTRIES):
-    with cty_cols[i % 4]:
-        selected = country["name"] in st.session_state.selected_countries
-        label = f"{'✅' if selected else '⬜'}  {country['emoji']}  {country['name']}"
-        if st.button(label, key=f"cty_{i}", use_container_width=True):
-            if country["name"] in st.session_state.selected_countries:
-                st.session_state.selected_countries.remove(country["name"])
-            else:
-                st.session_state.selected_countries.append(country["name"])
+if add_country and selected_country != "-- Select --":
+    if selected_country not in st.session_state.selected_countries:
+        st.session_state.selected_countries.append(selected_country)
+        st.rerun()
+
+if st.session_state.selected_countries:
+    cc1, cc2 = st.columns([4, 1])
+    with cc1:
+        st.markdown("**Selected:** " + "  ".join(
+            [f"`{c}`" for c in st.session_state.selected_countries]
+        ))
+    with cc2:
+        if st.button("Clear", key="clear_cty", use_container_width=True):
+            st.session_state.selected_countries = []
             st.rerun()
 
 st.markdown("---")
 
-# Selections summary in sidebar 
+# Sidebar summary 
 st.sidebar.markdown("### Your Selections")
 st.sidebar.markdown("**Policies:** " + (", ".join(st.session_state.selected_policies) or "None"))
 st.sidebar.markdown("**Countries:** " + (", ".join(st.session_state.selected_countries) or "None"))
 
-# Submit
+# Submit 
 if st.button("Submit Search Preferences", type="primary", use_container_width=True):
     if not st.session_state.selected_policies and not st.session_state.selected_countries:
         st.warning("Please select at least one policy or country before submitting.")
     else:
+        # Save preferences to DB
         prefs = {
             "user_id":    st.session_state.get("user_id", 1),
             "query_json": str({
@@ -113,10 +141,76 @@ if st.button("Submit Search Preferences", type="primary", use_container_width=Tr
             "file_format": "json",
         }
         try:
-            r = requests.post("http://web-api:4000/preferences", json=prefs)
-            if r.status_code == 201:
-                st.success(f"✅ Preferences saved! Policies: {', '.join(st.session_state.selected_policies) or 'None'} | Countries: {', '.join(st.session_state.selected_countries) or 'None'}")
-            else:
-                st.error("Could not save preferences. Please try again.")
-        except requests.exceptions.ConnectionError:
-            st.success("✅ Preferences saved! (demo mode — backend not connected yet)")
+            requests.post("http://web-api:4000/preferences", json=prefs)
+        except:
+            pass
+
+        st.markdown("## Results")
+
+        # Filter
+        filtered = lf_df.copy()
+
+        # Filter by country — matches "Head office" column
+        if st.session_state.selected_countries:
+            filtered = filtered[
+                filtered["Head office"].isin(st.session_state.selected_countries)
+            ]
+
+        # Filter by policy — keyword match on "Interest represented" column
+        if st.session_state.selected_policies:
+            keywords = []
+            for policy in st.session_state.selected_policies:
+                keywords.extend(POLICY_KEYWORDS.get(policy, [policy.lower()]))
+            pattern = "|".join(keywords)
+            filtered = filtered[
+                filtered["Interest represented"].str.contains(
+                    pattern, case=False, na=False
+                )
+            ]
+
+        # Display results 
+        if not filtered.empty:
+            st.markdown(f"### 🏛️ Organizations ({len(filtered)} found)")
+            st.dataframe(
+                filtered[[
+                    "Name", "Head office", "Lobbying cost",
+                    "Interest represented", "Meetings", "all EP passes"
+                ]].rename(columns={
+                    "Name":                 "Organization",
+                    "Head office":          "Country",
+                    "Lobbying cost":        "Lobbying Cost (€)",
+                    "Interest represented": "Interest",
+                    "Meetings":             "EU Meetings",
+                    "all EP passes":        "EP Passes",
+                }).sort_values("Lobbying Cost (€)", ascending=False),
+                use_container_width=True
+            )
+
+            # Top spender callout
+            top = filtered.nlargest(1, "Lobbying cost").iloc[0]
+            st.info(
+                f"💡 Top spender from your selection: **{top['Name']}** "
+                f"({top['Head office']}) — €{top['Lobbying cost']:,.0f}"
+            )
+        else:
+            st.info("No organizations found for your selections. Try different filters.")
+
+        # World Bank indicators for selected countries 
+        if st.session_state.selected_countries:
+            st.markdown("### 🌍 Country Economic Context")
+            st.caption("GDP, fossil fuel usage, and CO2 emissions from World Bank data.")
+
+            for country in st.session_state.selected_countries:
+                country_data = wb_df[wb_df["country"] == country].sort_values("date")
+                if not country_data.empty:
+                    st.markdown(f"**{country}**")
+                    latest = country_data.iloc[-1]
+                    m1, m2, m3 = st.columns(3)
+                    m1.metric("GDP (USD)",         f"${latest['GDP']:,.0f}")
+                    m2.metric("Fossil Fuels (%)",  f"{latest['Fossil_Fuels']:.1f}%")
+                    m3.metric("CO2 Emissions",     f"{latest['CO2_emit']:,.0f} kt")
+                    st.line_chart(
+                        country_data.set_index("date")["GDP"],
+                        use_container_width=True,
+                        height=150
+                    )

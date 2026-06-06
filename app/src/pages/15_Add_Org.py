@@ -13,18 +13,17 @@ st.markdown("# Add Organization")
 st.sidebar.header("Add New NGO")
 st.write("Search for existing organizations to save to your comparison list, or create a brand new one.")
 
-# ── Session state ─────────────────────────────────────────────────────────────
+# Session state 
 if "saved_orgs" not in st.session_state:
     st.session_state.saved_orgs = []
 if "search_results" not in st.session_state:
     st.session_state.search_results = []
 
-# ── Tabs ──────────────────────────────────────────────────────────────────────
+# Tabs 
 tab_search, tab_create = st.tabs(["🔍 Search & Save", "➕ Create New"])
 
-# ═════════════════════════════════════════════════════════════════════════════
+
 # TAB 1 — Search & Save
-# ═════════════════════════════════════════════════════════════════════════════
 with tab_search:
     st.markdown("### Find an Organization")
     st.write("Search by policy area, country, or industry and save results to your comparison list.")
@@ -76,9 +75,7 @@ with tab_search:
         st.markdown(f"**{len(st.session_state.saved_orgs)} org(s) saved to your comparison list.** "
                     f"Go to the **Organization Comparison** page to compare them.")
 
-# ═════════════════════════════════════════════════════════════════════════════
 # TAB 2 — Create New
-# ═════════════════════════════════════════════════════════════════════════════
 with tab_create:
     st.markdown("### Create a New Organization")
     st.write("Fill in the fields below to add a new organization to the database.")
