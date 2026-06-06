@@ -8,5 +8,10 @@ st.set_page_config(layout='wide')
 
 SideBarLinks()
 
-st.title('Journalist Home Page')
-st.write('TODO: Add functionality for journalist here')
+st.title(f"Welcome Political Party Journalist, {st.session_state['first_name']}.")
+st.write('### What would you like to do today?')
+
+if st.button('Predict party parliament probability',
+             type='primary',
+             use_container_width=True):
+    st.switch_page('pages/21_Party_Prediction.py')

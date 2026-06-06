@@ -138,7 +138,7 @@ CREATE TABLE IF NOT EXISTS party_model_scaler (
 );
 
 CREATE TABLE IF NOT EXISTS party_info (
-   party_name_english VARCHAR(60) NOT NULL PRIMARY KEY
+   party_name_english VARCHAR(100) NOT NULL PRIMARY KEY
   ,country_name       VARCHAR(14) NOT NULL
   ,populist           BIT  NOT NULL
   ,populist_bl        BIT  NOT NULL
