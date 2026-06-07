@@ -6,6 +6,7 @@ from backend.db_connection import get_db
 from backend.utils import error_response
 from mysql.connector import Error
 from backend.ml_models import lobby_model
+from backend.ml_models import party_model
 
 organizations_bp = Blueprint("organizations", __name__)
 countries_bp     = Blueprint("countries", __name__)
@@ -392,6 +393,57 @@ def get_lobby_prediction():
         return jsonify({"error": str(e)}), 400
     except Exception as e:
         current_app.logger.error(f"lobby prediction error: {e}")
+        return jsonify({"error": "Error processing prediction request"}), 500
+
+@ml_bp.route("/party/prediction", methods=["POST"])
+def get_party_prediction():
+    current_app.logger.info("POST /party/prediction")
+    try:
+        data = request.get_json(silent=True) or {}
+
+        required_fields = [
+            "populist", "populist_bl", "farright", "farright_bl", "farleft", "farleft_bl",
+            "eurosceptic", "eurosceptic_bl", "country_name", "eu_anti_pro"
+        ]
+        missing_fields = [field for field in required_fields if field not in data]
+        if missing_fields:
+            return jsonify({"error": f"Missing required fields: {', '.join(missing_fields)}"}), 400
+
+        prediction = party_model.predict(
+            data["populist"],
+            data["populist_bl"],
+            data["farright"],
+            data["farright_bl"],
+            data["farleft"],
+            data["farleft_bl"],
+            data["eurosceptic"],
+            data["eurosceptic_bl"],
+            data["country_name"],
+            data["eu_anti_pro"]
+        )
+
+        current_app.logger.info(f"party prediction returned {prediction:.2f}")
+        return jsonify({
+            "prediction": round(prediction, 2),
+            "input_variables": {
+                "populist": int(data["populist"]),
+                "populist_bl": int(data["populist_bl"]),
+                "farright": int(data["farright"]),
+                "farright_bl": int(data["farright_bl"]),
+                "farleft": int(data["farleft"]),
+                "farleft_bl": int(data["farleft_bl"]),
+                "eurosceptic": int(data["eurosceptic"]),
+                "eurosceptic_bl": int(data["eurosceptic_bl"]),
+                "country_name": data["country_name"],
+                "eu_anti_pro": float(data["eu_anti_pro"]),
+            },
+        }), 200
+
+    except ValueError as e:
+        current_app.logger.error(f"party prediction input error: {e}")
+        return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        current_app.logger.error(f"party prediction error: {e}")
         return jsonify({"error": "Error processing prediction request"}), 500
 
 def main():

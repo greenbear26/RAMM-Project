@@ -73,7 +73,7 @@ def journalist_home_nav():
 
 def ml_model_mgmt_nav():
     st.sidebar.page_link(
-        "pages/21_ML_Model_Mgmt.py", label="ML Model Management", icon="🏢"
+        "pages/21_Party_Prediction.py", label="Party Parliament Prediction", icon="🏢"
     )
 
 def new_ml_model_nav():
@@ -117,7 +117,7 @@ def SideBarLinks(show_home=False):
 
         if st.session_state["role"] == "administrator":
             journalist_home_nav()
-            # ml_model_mgmt_nav()
+            ml_model_mgmt_nav()
             # new_ml_model_nav()
             
     # About link appears at the bottom for all roles
