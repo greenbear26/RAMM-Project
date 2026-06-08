@@ -147,7 +147,8 @@ def predict(lobbying_cost, ep_passes, members_fte, country, interest):
     # [1, x1, x2] . [intercept, b1, b2]
     input_vec = np.array([x_scaled[0], x_scaled[1], x_scaled[2], x_scaled[3], x_scaled[4], x_scaled[5]])
     prediction = float(params.T @ input_vec)
+    actual_prediction = np.exp(prediction)  # reverse the log transformation to get back to original scale
     current_app.logger.info(
-        f"lobby_model.predict({lobbying_cost}, {ep_passes}, {members_fte}, {country}, {interest}) -> {prediction:.2f}"
+        f"lobby_model.predict({lobbying_cost}, {ep_passes}, {members_fte}, {country}, {interest}) -> {actual_prediction:.2f}"
     )
-    return prediction
+    return actual_prediction

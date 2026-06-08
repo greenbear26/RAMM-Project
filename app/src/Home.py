@@ -63,7 +63,7 @@ if st.button('Act as Jacques Clouseau, a A world-class political science researc
     st.session_state['first_name'] = 'Jacques Clouseau'
     st.switch_page('pages/10_Polysci_Home.py')
 
-if st.button('Act as Tintin, a International Independent Investigative Journalist',
+if st.button('Act as Tintin, a Political Party Journalist',
              type='primary',
              use_container_width=True):
     st.session_state['authenticated'] = True
