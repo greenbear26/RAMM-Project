@@ -48,7 +48,6 @@ if st.button("Login", key="citizen_login", type="primary"):
 st.write("")
 # Persona 2: Political Science Researcher
 st.subheader("Political Science Researcher:")
-researcher_options = ["Jacques Clouseau"]
 selected_researcher = st.selectbox("Select researcher", researcher_options,
                                    key="researcher_select", label_visibility="collapsed")
 if st.button("Login", key="researcher_login", type="primary"):
@@ -63,7 +62,6 @@ st.write("")
 
 # Political Party Journalist 
 st.subheader("Political Party Journalist:")
-journalist_options = ["Tintin"]
 selected_journalist = st.selectbox("Select journalist", journalist_options,
                                    key="journalist_select", label_visibility="collapsed")
 if st.button("Login", key="journalist_login", type="primary"):
