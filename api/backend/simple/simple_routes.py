@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, current_app, redirect, request, url_for
 from backend.simple.playlist import sample_playlist_data
-from backend.ml_models import lobby_model, model01, model02
+from ml_models.lobby_model import predict as lobby_predict
+
 
 # This blueprint handles basic routes useful for testing and demonstration
 simple_routes = Blueprint("simple_routes", __name__)

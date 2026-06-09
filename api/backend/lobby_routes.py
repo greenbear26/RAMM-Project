@@ -5,8 +5,8 @@ from flask import Blueprint, jsonify, request, current_app
 from backend.db_connection import get_db
 from backend.utils import error_response
 from mysql.connector import Error
-from backend.ml_models import lobby_model
-from backend.ml_models import party_model
+from ml_models.lobby_model import predict as lobby_predict
+from ml_models.party_model import predict as party_predict
 
 organizations_bp = Blueprint("organizations", __name__)
 countries_bp     = Blueprint("countries", __name__)
@@ -368,7 +368,7 @@ def get_lobby_prediction():
         if missing_fields:
             return jsonify({"error": f"Missing required fields: {', '.join(missing_fields)}"}), 400
 
-        prediction = lobby_model.predict(
+        prediction = lobby_predict(
             data["lobbying_cost"],
             data["ep_passes"],
             data["members_fte"],
@@ -409,7 +409,7 @@ def get_party_prediction():
         if missing_fields:
             return jsonify({"error": f"Missing required fields: {', '.join(missing_fields)}"}), 400
 
-        prediction = party_model.predict(
+        prediction = party_predict(
             data["populist"],
             data["populist_bl"],
             data["farright"],
