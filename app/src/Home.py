@@ -1,72 +1,74 @@
-##################################################
-# This is the main/entry-point file for the
-# sample application for your project
-##################################################
+# Main/entry-point file for LobbyLens
 
-# Set up basic logging infrastructure
+
 import logging
 logging.basicConfig(format='%(filename)s:%(lineno)s:%(levelname)s -- %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# import the main streamlit library as well
-# as SideBarLinks function from src/modules folder
+import os
 import streamlit as st
+import pandas as pd
 from modules.nav import SideBarLinks
 
-# streamlit supports regular and wide layout (how the controls
-# are organized/displayed on the screen).
 st.set_page_config(layout='wide')
 
-# If a user is at this page, we assume they are not
-# authenticated.  So we change the 'authenticated' value
-# in the streamlit session_state to false.
 st.session_state['authenticated'] = False
 
-# Use the SideBarLinks function from src/modules/nav.py to control
-# the links displayed on the left-side panel.
-# IMPORTANT: ensure src/.streamlit/config.toml sets
-# showSidebarNavigation = false in the [client] section
 SideBarLinks(show_home=True)
 
-# ***************************************************
-#    The major content of this page
-# ***************************************************
-
 logger.info("Loading the Home page of the app")
-st.title('LobbyLens')
-st.write('#### Hi! As which user would you like to log in?')
 
-# For each of the user personas for which we are implementing
-# functionality, we put a button on the screen that the user
-# can click to MIMIC logging in as that mock user.
+# Load users from CSVs 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-if st.button("Act as Stromae, a Common European Citizen",
-             type='primary',
-             use_container_width=True):
-    # when user clicks the button, they are now considered authenticated
+def load_users(filepath):
+    df = pd.read_csv(filepath)
+    return [f"{row['first_name']} {row['last_name']}" for _, row in df.iterrows()]
+
+citizen_options    = load_users(os.path.join(BASE_DIR, 'Mock_data', 'Citizen_DATA.csv'))
+researcher_options = load_users(os.path.join(BASE_DIR, 'Mock_data', 'PolySci_DATA.csv'))
+journalist_options = load_users(os.path.join(BASE_DIR, 'Mock_data', 'Journalist_DATA.csv'))
+
+# Page content
+st.title("Welcome to LobbyLens!")
+st.write("---")
+
+# Persona 1: European Citizen
+st.subheader("European Citizen:")
+selected_citizen = st.selectbox("Select citizen", citizen_options,
+                                key="citizen_select", label_visibility="collapsed")
+if st.button("Login", key="citizen_login", type="primary"):
     st.session_state['authenticated'] = True
-    # we set the role of the current user
     st.session_state['role'] = 'pol_strat_advisor'
-    # we add the first name of the user (so it can be displayed on
-    # subsequent pages).
-    st.session_state['first_name'] = 'Stromae'
-    # finally, we ask streamlit to switch to another page, in this case, the
-    # landing page for this particular user type
-    logger.info("Logging in as Political Strategy Advisor Persona")
+    st.session_state['first_name'] = selected_citizen.split()[0]
+    st.session_state['last_name'] = selected_citizen.split()[1]
+    logger.info(f"Logging in as Citizen: {selected_citizen}")
     st.switch_page('pages/00_Citizen_Home.py')
 
-if st.button('Act as Jacques Clouseau, a A world-class political science researcher',
-             type='primary',
-             use_container_width=True):
+st.write("")
+
+# Persona 2: Political Science Researcher
+st.subheader("Political Science Researcher:")
+selected_researcher = st.selectbox("Select researcher", researcher_options,
+                                   key="researcher_select", label_visibility="collapsed")
+if st.button("Login", key="researcher_login", type="primary"):
     st.session_state['authenticated'] = True
     st.session_state['role'] = 'usaid_worker'
-    st.session_state['first_name'] = 'Jacques Clouseau'
+    st.session_state['first_name'] = selected_researcher.split()[0]
+    st.session_state['last_name'] = selected_researcher.split()[1]
+    logger.info(f"Logging in as Researcher: {selected_researcher}")
     st.switch_page('pages/10_Polysci_Home.py')
 
-if st.button('Act as Tintin, a Political Party Journalist',
-             type='primary',
-             use_container_width=True):
+st.write("")
+
+# Persona 3: Investigative Journalist
+st.subheader("Investigative Journalist:")
+selected_journalist = st.selectbox("Select journalist", journalist_options,
+                                   key="journalist_select", label_visibility="collapsed")
+if st.button("Login", key="journalist_login", type="primary"):
     st.session_state['authenticated'] = True
     st.session_state['role'] = 'administrator'
-    st.session_state['first_name'] = 'Tintin'
+    st.session_state['first_name'] = selected_journalist.split()[0]
+    st.session_state['last_name'] = selected_journalist.split()[1]
+    logger.info(f"Logging in as Journalist: {selected_journalist}")
     st.switch_page('pages/20_Journalist_Home.py')
