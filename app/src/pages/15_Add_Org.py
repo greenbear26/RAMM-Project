@@ -13,6 +13,22 @@ st.markdown("# Add Organization")
 st.sidebar.header("Add New NGO")
 st.write("Search for existing organizations to save to your comparison list, or create a brand new one.")
 
+# Dropdown options 
+POLICY_AREAS = [
+    "", "Agriculture", "Budget", "Climate", "Competition", "Consumer Affairs",
+    "Culture", "Defence", "Digital & AI", "Education", "Energy", "Environment",
+    "Finance", "Food Safety", "Foreign Policy", "Health", "Immigration",
+    "Industry", "Justice", "Labour", "Research", "Tax", "Trade", "Transport"
+]
+
+COUNTRIES = [
+    "", "Austria", "Belgium", "Bulgaria", "Croatia", "Cyprus", "Czech Republic",
+    "Denmark", "Estonia", "Finland", "France", "Germany", "Greece", "Hungary",
+    "Ireland", "Italy", "Latvia", "Lithuania", "Luxembourg", "Malta", "Netherlands",
+    "Poland", "Portugal", "Romania", "Slovakia", "Slovenia", "Spain", "Sweden",
+    "Norway", "Switzerland", "United Kingdom", "United States"
+]
+
 # Session state 
 if "saved_orgs" not in st.session_state:
     st.session_state.saved_orgs = []
@@ -26,21 +42,18 @@ tab_search, tab_create = st.tabs(["🔍 Search & Save", "➕ Create New"])
 # TAB 1 — Search & Save
 with tab_search:
     st.markdown("### Find an Organization")
-    st.write("Search by policy area, country, or industry and save results to your comparison list.")
+    st.write("Search by policy area or country and save results to your comparison list.")
 
-    f1, f2, f3 = st.columns(3)
+    f1, f2 = st.columns(2)
     with f1:
-        policy_filter   = st.text_input("Policy Area", placeholder="e.g. AI, Climate")
+        policy_filter = st.selectbox("Policy Area", options=POLICY_AREAS, key="policy_search")
     with f2:
-        country_filter  = st.text_input("Country Code", placeholder="e.g. DE, FR, BE")
-    with f3:
-        industry_filter = st.text_input("Industry", placeholder="e.g. Technology")
+        country_filter = st.selectbox("Country", options=COUNTRIES, key="country_search")
 
     if st.button("Search 🔍", type="primary", use_container_width=True):
         params = {}
-        if policy_filter:   params["policy_area"] = policy_filter
-        if country_filter:  params["country"]     = country_filter
-        if industry_filter: params["industry"]    = industry_filter
+        if policy_filter:  params["policy_area"] = policy_filter
+        if country_filter: params["country"]     = country_filter
         try:
             resp = requests.get("http://web-api:4000/organizations", params=params)
             st.session_state.search_results = resp.json() if resp.status_code == 200 else []
@@ -69,7 +82,6 @@ with tab_search:
     elif st.session_state.get("searched"):
         st.info("No results found. Try different filters.")
 
-    # Saved orgs summary at bottom
     if st.session_state.saved_orgs:
         st.markdown("---")
         st.markdown(f"**{len(st.session_state.saved_orgs)} org(s) saved to your comparison list.** "
@@ -83,26 +95,24 @@ with tab_create:
     with st.form("create_org_form"):
         c1, c2 = st.columns(2)
         with c1:
-            name                 = st.text_input("Organization Name *")
-            country_code         = st.text_input("Country Code *", placeholder="e.g. DE, FR, BE")
-            lobbying_cost        = st.number_input("Lobbying Cost (€)", min_value=0.0, step=1000.0)
-            members_eu           = st.number_input("EU Members", min_value=0, step=1)
+            name          = st.text_input("Organization Name *")
+            country       = st.selectbox("Country *", options=COUNTRIES, key="country_create")
+            lobbying_cost = st.number_input("Lobbying Cost (€)", min_value=0.0, step=1000.0)
+            members_eu    = st.number_input("EU Members", min_value=0, step=1)
         with c2:
-            industry_id          = st.number_input("Industry ID *", min_value=1, step=1)
-            interest_represented = st.text_input("Interest Represented", placeholder="e.g. Technology sector")
+            interest_represented = st.selectbox("Policy Area *", options=POLICY_AREAS, key="policy_create")
             members_fte          = st.number_input("FTE Members", min_value=0, step=1)
             lobbyfacts_url       = st.text_input("LobbyFacts URL", placeholder="https://...")
 
         submitted = st.form_submit_button("Create Organization", type="primary", use_container_width=True)
 
     if submitted:
-        if not name or not country_code or not industry_id:
+        if not name or not country or not interest_represented:
             st.error("Please fill in all required fields (marked with *).")
         else:
             payload = {
                 "name":                 name,
-                "country_code":         country_code,
-                "industry_id":          int(industry_id),
+                "country":              country,
                 "lobbying_cost":        lobbying_cost,
                 "members_eu":           int(members_eu),
                 "members_fte":          int(members_fte),
@@ -114,7 +124,6 @@ with tab_create:
                 if resp.status_code == 201:
                     new_id = resp.json().get("org_id")
                     st.success(f"✅ Organization **{name}** created successfully! (ID: {new_id})")
-                    # Auto-save to comparison list
                     payload["org_id"] = new_id
                     st.session_state.saved_orgs.append(payload)
                 else:

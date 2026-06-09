@@ -29,7 +29,7 @@ with saved_col:
     st.caption("Select up to 2 orgs to compare.")
 
     if not st.session_state.saved_orgs:
-        st.info("No saved orgs yet. Use the **Add New NGO** page.")
+        st.info("No saved orgs yet. Use the **Add New Organization** page.")
     else:
         for org in st.session_state.saved_orgs:
             in_compare = org["org_id"] in [o["org_id"] for o in st.session_state.compare_pair]
@@ -77,7 +77,7 @@ with main_col:
     st.tabs(["📊 Score Comparison"])
 
     if len(st.session_state.compare_pair) == 0:
-        st.info("Use the **Add New NGO** page to save orgs, then select 2 from the right column to compare.")
+        st.info("Use the **Add New Organization** page to save orgs, then select 2 from the right column to compare.")
 
     elif len(st.session_state.compare_pair) == 1:
         st.info("Select one more org from your saved list on the right to compare.")
