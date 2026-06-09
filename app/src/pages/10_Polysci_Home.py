@@ -12,12 +12,13 @@ SideBarLinks()
 st.title(f"Welcome Political Science Researcher, {st.session_state['first_name']}.")
 st.write('### What would you like to do today?')
 
-if st.button('View NGO Directory',
+if st.button('View Organization Directory',
              type='primary',
              use_container_width=True):
-    st.switch_page('pages/14_NGO_Directory.py')
+    st.switch_page('pages/14_Org_Directory.py')
 
-if st.button('Add New NGO',
+
+if st.button('Add New Organization',
              type='primary',
              use_container_width=True):
     st.switch_page('pages/15_Add_Org.py')

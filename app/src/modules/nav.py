@@ -5,7 +5,7 @@
 import streamlit as st
 
 
-# ---- General ----------------------------------------------------------------
+# General 
 
 def home_nav():
     st.sidebar.page_link("Home.py", label="Home", icon="🏠")
@@ -15,7 +15,7 @@ def about_page_nav():
     st.sidebar.page_link("pages/30_About.py", label="About", icon="🧠")
 
 
-# ---- Role: Citizen ------------------------------------------------
+# Role: Citizen
 
 def pol_strat_home_nav():
     st.sidebar.page_link(
@@ -33,7 +33,7 @@ def map_demo_nav():
     st.sidebar.page_link("pages/02_Explore.py", label="Explore Page", icon="🔎️")
 
 
-# ---- Role: Poly-Sci Researcher -----------------------------------------------------
+# Role: Poly-Sci Researcher
 
 def usaid_worker_home_nav():
     st.sidebar.page_link(
@@ -42,7 +42,7 @@ def usaid_worker_home_nav():
 
 
 def ngo_directory_nav():
-    st.sidebar.page_link("pages/14_NGO_Directory.py", label="Organization Comparison", icon="📊")
+    st.sidebar.page_link("pages/14_Org_Directory.py", label="Organization Comparison", icon="📊")
 
 
 def add_ngo_nav():
@@ -65,7 +65,7 @@ def classification_nav():
     )
 
 
-# ---- Role: Political Journalist ----------------------------------------------------
+# Role: Political Journalist
 
 def journalist_home_nav():
     st.sidebar.page_link("pages/20_Journalist_Home.py", label="Journalist Home", icon="🖥️")
@@ -81,7 +81,7 @@ def new_ml_model_nav():
         "pages/22_Prettier_ML.py", label="New ML Model", icon="📈"
     )
 
-# ---- Sidebar assembly -------------------------------------------------------
+# Sidebar assembly
 
 def SideBarLinks(show_home=False):
     """
