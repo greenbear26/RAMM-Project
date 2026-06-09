@@ -1,5 +1,5 @@
-# Main/entry-point file for LobbyLens
 
+# Main/entry-point file for LobbyLens
 
 import logging
 logging.basicConfig(format='%(filename)s:%(lineno)s:%(levelname)s -- %(message)s', level=logging.INFO)
@@ -46,9 +46,9 @@ if st.button("Login", key="citizen_login", type="primary"):
     st.switch_page('pages/00_Citizen_Home.py')
 
 st.write("")
-
 # Persona 2: Political Science Researcher
 st.subheader("Political Science Researcher:")
+researcher_options = ["Jacques Clouseau"]
 selected_researcher = st.selectbox("Select researcher", researcher_options,
                                    key="researcher_select", label_visibility="collapsed")
 if st.button("Login", key="researcher_login", type="primary"):
@@ -61,8 +61,9 @@ if st.button("Login", key="researcher_login", type="primary"):
 
 st.write("")
 
-# Persona 3: Investigative Journalist
-st.subheader("Investigative Journalist:")
+# Political Party Journalist 
+st.subheader("Political Party Journalist:")
+journalist_options = ["Tintin"]
 selected_journalist = st.selectbox("Select journalist", journalist_options,
                                    key="journalist_select", label_visibility="collapsed")
 if st.button("Login", key="journalist_login", type="primary"):
