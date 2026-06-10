@@ -62,7 +62,8 @@ CREATE TABLE IF NOT EXISTS party_model_scaler (
 );
 
 CREATE TABLE IF NOT EXISTS party_info (
-    party_name_english  VARCHAR(100)    NOT NULL PRIMARY KEY,
+    party_id            NUMERIC(6,1)    PRIMARY KEY,
+    party_name_english  VARCHAR(100)    NOT NULL,
     country_name        VARCHAR(14)     NOT NULL,
     populist            BIT             NOT NULL,
     populist_bl         BIT             NOT NULL,
@@ -73,7 +74,6 @@ CREATE TABLE IF NOT EXISTS party_info (
     eurosceptic         BIT             NOT NULL,
     eurosceptic_bl      BIT             NOT NULL,
     in_parliament       NUMERIC(3,1)    NOT NULL,
-    party_id            NUMERIC(6,1)    NOT NULL,
     family_name         VARCHAR(19)     NOT NULL,
     left_right          NUMERIC(6,4)    NOT NULL,
     state_market        NUMERIC(6,4)    NOT NULL,
