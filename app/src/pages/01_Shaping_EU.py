@@ -19,22 +19,8 @@ if "selected_policies" not in st.session_state:
 if "selected_countries" not in st.session_state:
     st.session_state.selected_countries = []
 
-# Load policy areas live from the backend (fallback to hardcoded list)
-@st.cache_data(ttl=300)
-def fetch_policy_areas():
-    try:
-        resp = requests.get(f"{API_BASE}/policy-areas")
-        if resp.status_code == 200:
-            return sorted(pa["name"] for pa in resp.json())
-    except Exception:
-        pass
-    return [
-        "Artificial Intelligence", "Climate & Energy", "Healthcare",
-        "Defence & Security", "Finance & Banking", "Agriculture",
-        "Digital Markets", "Transport",
-    ]
-
-POLICIES = fetch_policy_areas()
+st.cache_data.clear()
+POLICIES = ["Artificial Intelligence","Climate & Energy","Healthcare","Defence & Security","Finance & Banking","Agriculture","Digital Markets","Transport"]
 
 COUNTRIES = [
     "Austria", "Belgium", "Bulgaria", "Croatia", "Cyprus",
@@ -106,8 +92,9 @@ if st.button("Search", type="primary", use_container_width=True):
         else:
             table = [{
                 "Name":                 o.get("name"),
+                "Policy areas":         o.get("policy_areas").strip("[]").replace('"', '') if o.get("policy_areas") else "",
                 "Lobbying cost":        o.get("lobbying_cost"),
                 "Interest represented": o.get("interest_represented"),
-                "Country":              o.get("country_code"),
+                "Country":              o.get("country_name"),
             } for o in results]
             st.dataframe(table, use_container_width=True)
