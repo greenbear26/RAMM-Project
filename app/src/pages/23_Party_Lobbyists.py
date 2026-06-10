@@ -42,9 +42,6 @@ if st.button("Search", type="primary", use_container_width=True):
                     lobbyists         = ast.literal_eval(info["lobbyists"])
                     meetings          = ast.literal_eval(info["meetings_per_lobbyist"])
                     total_meetings    = int(info["total_meetings"])
-                    st.write(lobbyists)
-                    st.write(meetings)
-                    st.write(total_meetings)
 
                     st.markdown(f"### {selected_ep_party} — {total_meetings} total meetings")
                     st.markdown("---")
@@ -55,11 +52,7 @@ if st.button("Search", type="primary", use_container_width=True):
                         "Meetings": meeting
                     } for lobbyist, meeting in zip(lobbyists, meetings)]).sort_values("Meetings", ascending=False, ignore_index=True)
 
-                    st.table(df)
-
-                    st.markdown("---")
-                    st.markdown("### Full Lobbyist Breakdown")
-                    st.dataframe(df, use_container_width=True)
+                    st.dataframe(df)
 
             else:
                 st.error("Failed to fetch lobby info.")
