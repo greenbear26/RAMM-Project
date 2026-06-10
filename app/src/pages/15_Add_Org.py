@@ -13,29 +13,46 @@ st.markdown("# Add Organization")
 st.sidebar.header("Add New NGO")
 st.write("Search for existing organizations to save to your comparison list, or create a brand new one.")
 
-# Dropdown options 
-POLICY_AREAS = [
-    "", "Agriculture", "Budget", "Climate", "Competition", "Consumer Affairs",
-    "Culture", "Defence", "Digital & AI", "Education", "Energy", "Environment",
-    "Finance", "Food Safety", "Foreign Policy", "Health", "Immigration",
-    "Industry", "Justice", "Labour", "Research", "Tax", "Trade", "Transport"
+API_BASE = "http://web-api:4000"
+
+# Fallback dropdown options (used if backend fetch fails)
+POLICY_AREAS_FALLBACK = [
+    "", "Artificial Intelligence", "Climate & Energy", "Healthcare",
+    "Defence & Security", "Finance & Banking", "Agriculture",
+    "Digital Markets", "Transport",
 ]
 
 COUNTRIES = [
     "", "Austria", "Belgium", "Bulgaria", "Croatia", "Cyprus", "Czech Republic",
     "Denmark", "Estonia", "Finland", "France", "Germany", "Greece", "Hungary",
     "Ireland", "Italy", "Latvia", "Lithuania", "Luxembourg", "Malta", "Netherlands",
-    "Poland", "Portugal", "Romania", "Slovakia", "Slovenia", "Spain", "Sweden",
-    "Norway", "Switzerland", "United Kingdom", "United States"
+    "Poland", "Portugal", "Romania", "Slovakia", "Slovenia", "Spain", "Sweden"
 ]
 
-# Session state 
+
+# Load policy areas live from the backend so they always match the DB
+@st.cache_data(ttl=300)
+def fetch_policy_areas():
+    try:
+        resp = requests.get(f"{API_BASE}/policy-areas")
+        if resp.status_code == 200:
+            names = [pa["name"] for pa in resp.json()]
+            return [""] + sorted(names)
+    except Exception:
+        pass
+    return POLICY_AREAS_FALLBACK
+
+POLICY_AREAS = fetch_policy_areas()
+
+# Session state
 if "saved_orgs" not in st.session_state:
     st.session_state.saved_orgs = []
 if "search_results" not in st.session_state:
     st.session_state.search_results = []
+if "searched" not in st.session_state:
+    st.session_state.searched = False
 
-# Tabs 
+# Tabs
 tab_search, tab_create = st.tabs(["🔍 Search & Save", "➕ Create New"])
 
 
@@ -55,8 +72,9 @@ with tab_search:
         if policy_filter:  params["policy_area"] = policy_filter
         if country_filter: params["country"]     = country_filter
         try:
-            resp = requests.get("http://web-api:4000/organizations", params=params)
+            resp = requests.get(f"{API_BASE}/organizations", params=params)
             st.session_state.search_results = resp.json() if resp.status_code == 200 else []
+            st.session_state.searched = True
         except requests.exceptions.ConnectionError:
             st.session_state.search_results = []
             st.warning("⚠️ Backend not connected yet.")
@@ -79,13 +97,14 @@ with tab_search:
                     if st.button("Save", key=f"save_{org['org_id']}", use_container_width=True):
                         st.session_state.saved_orgs.append(org)
                         st.rerun()
-    elif st.session_state.get("searched"):
+    elif st.session_state.searched:
         st.info("No results found. Try different filters.")
 
     if st.session_state.saved_orgs:
         st.markdown("---")
         st.markdown(f"**{len(st.session_state.saved_orgs)} org(s) saved to your comparison list.** "
                     f"Go to the **Organization Comparison** page to compare them.")
+
 
 # TAB 2 — Create New
 with tab_create:
@@ -98,7 +117,6 @@ with tab_create:
             name          = st.text_input("Organization Name *")
             country       = st.selectbox("Country *", options=COUNTRIES, key="country_create")
             lobbying_cost = st.number_input("Lobbying Cost (€)", min_value=0.0, step=1000.0)
-            members_eu    = st.number_input("EU Members", min_value=0, step=1)
         with c2:
             interest_represented = st.selectbox("Policy Area *", options=POLICY_AREAS, key="policy_create")
             members_fte          = st.number_input("FTE Members", min_value=0, step=1)
@@ -112,15 +130,13 @@ with tab_create:
         else:
             payload = {
                 "name":                 name,
-                "country":              country,
+                "country_code":         country,
                 "lobbying_cost":        lobbying_cost,
-                "members_eu":           int(members_eu),
                 "members_fte":          int(members_fte),
                 "interest_represented": interest_represented,
-                "lobbyfacts_url":       lobbyfacts_url,
             }
             try:
-                resp = requests.post("http://web-api:4000/organizations", json=payload)
+                resp = requests.post(f"{API_BASE}/organizations", json=payload)
                 if resp.status_code == 201:
                     new_id = resp.json().get("org_id")
                     st.success(f"✅ Organization **{name}** created successfully! (ID: {new_id})")
