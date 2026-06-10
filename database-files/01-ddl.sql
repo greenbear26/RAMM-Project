@@ -54,6 +54,8 @@ CREATE TABLE IF NOT EXISTS organization (
     created_at              DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at              DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (industry_id) REFERENCES industry(industry_id)
+        ON UPDATE CASCADE
+        ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS lobbying_activity (
@@ -68,8 +70,12 @@ CREATE TABLE IF NOT EXISTS lobbying_activity (
     end_date        DATE,
     created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (org_id) REFERENCES organization(org_id),
+    FOREIGN KEY (org_id) REFERENCES organization(org_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
     FOREIGN KEY (policy_area_id) REFERENCES policy_area(policy_area_id)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT
 );
 
 CREATE TABLE IF NOT EXISTS expenditure_record (
@@ -84,8 +90,12 @@ CREATE TABLE IF NOT EXISTS expenditure_record (
     source                  VARCHAR(255),
     created_at              DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at              DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (org_id) REFERENCES organization(org_id),
+    FOREIGN KEY (org_id) REFERENCES organization(org_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
     FOREIGN KEY (policy_area_id) REFERENCES policy_area(policy_area_id)
+        ON UPDATE CASCADE
+        ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS meeting (
@@ -99,6 +109,8 @@ CREATE TABLE IF NOT EXISTS meeting (
     created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (org_id) REFERENCES organization(org_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS access_pass (
@@ -113,6 +125,8 @@ CREATE TABLE IF NOT EXISTS access_pass (
     created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (org_id) REFERENCES organization(org_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS lobby_model_weights (
