@@ -9,3 +9,4 @@ pydeck
 requests
 plotly
 scikit-learn
+plotly

@@ -3,146 +3,185 @@ logger = logging.getLogger(__name__)
 
 import streamlit as st
 import requests
+import pandas as pd
 from modules.nav import SideBarLinks
 
-st.set_page_config(page_title="Add New NGO", page_icon="➕", layout='wide')
+st.set_page_config(page_title="Researcher Home", page_icon="📊", layout='wide')
 
 SideBarLinks()
 
-st.markdown("# Add Organization")
-st.sidebar.header("Add New NGO")
-st.write("Search for existing organizations to save to your comparison list, or create a brand new one.")
-
-API_BASE = "http://web-api:4000"
-
-# Fallback dropdown options (used if backend fetch fails)
-POLICY_AREAS_FALLBACK = [
-    "", "Artificial Intelligence", "Climate & Energy", "Healthcare",
-    "Defence & Security", "Finance & Banking", "Agriculture",
-    "Digital Markets", "Transport",
-]
-
-COUNTRIES = [
-    "", "Austria", "Belgium", "Bulgaria", "Croatia", "Cyprus", "Czech Republic",
-    "Denmark", "Estonia", "Finland", "France", "Germany", "Greece", "Hungary",
-    "Ireland", "Italy", "Latvia", "Lithuania", "Luxembourg", "Malta", "Netherlands",
-    "Poland", "Portugal", "Romania", "Slovakia", "Slovenia", "Spain", "Sweden"
-]
-
-
-# Load policy areas live from the backend so they always match the DB
-@st.cache_data(ttl=300)
-def fetch_policy_areas():
-    try:
-        resp = requests.get(f"{API_BASE}/policy-areas")
-        if resp.status_code == 200:
-            names = [pa["name"] for pa in resp.json()]
-            return [""] + sorted(names)
-    except Exception:
-        pass
-    return POLICY_AREAS_FALLBACK
-
-POLICY_AREAS = fetch_policy_areas()
+st.markdown("# Organization Comparison")
+st.sidebar.header("Researcher Home")
+st.write("Save organizations from the Add New Organization page or the Meeting Prediction page, then select two here to compare their lobbying spend, policy areas, and ML influence scores side by side.")
 
 # Session state
 if "saved_orgs" not in st.session_state:
     st.session_state.saved_orgs = []
-if "search_results" not in st.session_state:
-    st.session_state.search_results = []
-if "searched" not in st.session_state:
-    st.session_state.searched = False
+if "saved_comparisons" not in st.session_state:
+    st.session_state.saved_comparisons = []
+if "compare_pair" not in st.session_state:
+    st.session_state.compare_pair = []
 
-# Tabs
-tab_search, tab_create = st.tabs(["🔍 Search & Save", "➕ Create New"])
+# Merge saved_orgs and saved_comparisons into one list
+all_saved = st.session_state.saved_orgs.copy()
+for org in st.session_state.saved_comparisons:
+    existing_names = [o.get('name') for o in all_saved]
+    if org.get('name') not in existing_names:
+        all_saved.append(org)
 
+# Quick search bar
+st.divider()
+st.markdown("### Search for an organization")
+search_col1, search_col2 = st.columns([4, 1])
+with search_col1:
+    search_query = st.text_input("Search by name", placeholder="e.g. Google, Airbus, WWF...", label_visibility="collapsed")
+with search_col2:
+    search_btn = st.button("Search", use_container_width=True)
 
-# TAB 1 — Search & Save
-with tab_search:
-    st.markdown("### Find an Organization")
-    st.write("Search by policy area or country and save results to your comparison list.")
+if search_btn and search_query:
+    try:
+        resp = requests.get("http://web-api:4000/organizations", params={"name": search_query})
+        if resp.status_code == 200:
+            results = resp.json()
+            if results:
+                for org in results[:5]:
+                    already = org.get("name") in [o.get("name") for o in st.session_state.saved_orgs]
+                    r1, r2, r3 = st.columns([4, 2, 1])
+                    with r1:
+                        st.markdown(f"**{org['name']}**")
+                        st.caption(f"{org.get('country_code', '—')} · €{org.get('lobbying_cost', 0):,.0f}")
+                    with r2:
+                        st.markdown(f"{org.get('interest_represented', '—')}")
+                    with r3:
+                        if already:
+                            st.caption("✅ Saved")
+                        else:
+                            if st.button("Save", key=f"search_save_{org['org_id']}"):
+                                st.session_state.saved_orgs.append(org)
+                                st.rerun()
+            else:
+                st.info("No organizations found.")
+    except:
+        st.warning("Backend not connected.")
 
-    f1, f2 = st.columns(2)
-    with f1:
-        policy_filter = st.selectbox("Policy Area", options=POLICY_AREAS, key="policy_search")
-    with f2:
-        country_filter = st.selectbox("Country", options=COUNTRIES, key="country_search")
+st.divider()
 
-    if st.button("Search 🔍", type="primary", use_container_width=True):
-        params = {}
-        if policy_filter:  params["policy_area"] = policy_filter
-        if country_filter: params["country"]     = country_filter
-        try:
-            resp = requests.get(f"{API_BASE}/organizations", params=params)
-            st.session_state.search_results = resp.json() if resp.status_code == 200 else []
-            st.session_state.searched = True
-        except requests.exceptions.ConnectionError:
-            st.session_state.search_results = []
-            st.warning("⚠️ Backend not connected yet.")
+# Layout
+main_col, saved_col = st.columns([3, 1])
 
-    if st.session_state.search_results:
-        st.markdown(f"**{len(st.session_state.search_results)} results found**")
-        st.markdown("---")
-        for org in st.session_state.search_results[:10]:
-            already = org["org_id"] in [o["org_id"] for o in st.session_state.saved_orgs]
-            r1, r2, r3 = st.columns([4, 2, 1])
-            with r1:
-                st.markdown(f"**{org['name']}**")
-                st.caption(f"{org.get('country_code','—')} · {org.get('interest_represented','—')}")
-            with r2:
-                st.markdown(f"€{org.get('lobbying_cost', 0):,.0f}")
-            with r3:
-                if already:
-                    st.caption("✅ Saved")
+# RIGHT COLUMN — Saved Comparisons
+with saved_col:
+    st.markdown("### Saved Comparisons")
+    st.caption("Select up to 2 orgs to compare.")
+
+    if not all_saved:
+        st.info("No saved orgs yet. Use the **Add New Organization** page, search above, or click Save on the **Meeting Prediction** page.")
+    else:
+        for org in all_saved:
+            in_compare = org.get("name") in [o.get("name") for o in st.session_state.compare_pair]
+            border = "#2563EB" if in_compare else "#E0D8C8"
+            check = "✅ " if in_compare else ""
+            st.markdown(f"""
+            <div style="border: 2px solid {border}; border-radius: 10px;
+                        padding: 10px 14px; margin-bottom: 8px; background: #1A1F2E;">
+              <div style="font-weight: 500; font-size: 13px; color: #FFFFFF;">{check}{org['name']}</div>
+              <div style="font-size: 11px; color: #999; margin-top: 2px;">
+                {org.get('country_code', '—')} &nbsp;·&nbsp; €{org.get('lobbying_cost', 0):,.0f}
+              </div>
+            </div>""", unsafe_allow_html=True)
+
+            b1, b2 = st.columns(2)
+            with b1:
+                cmp_label = "✕ Remove" if in_compare else "Compare"
+                if st.button(cmp_label, key=f"cmp_{org['name']}", use_container_width=True):
+                    if in_compare:
+                        st.session_state.compare_pair = [
+                            o for o in st.session_state.compare_pair
+                            if o.get("name") != org.get("name")
+                        ]
+                    else:
+                        if len(st.session_state.compare_pair) < 2:
+                            st.session_state.compare_pair.append(org)
+                        else:
+                            st.warning("Max 2 orgs. Remove one first.")
+                    st.rerun()
+            with b2:
+                if st.button("🗑️", key=f"del_{org['name']}", use_container_width=True):
+                    st.session_state.saved_orgs = [
+                        o for o in st.session_state.saved_orgs
+                        if o.get("name") != org.get("name")
+                    ]
+                    st.session_state.saved_comparisons = [
+                        o for o in st.session_state.saved_comparisons
+                        if o.get("name") != org.get("name")
+                    ]
+                    st.session_state.compare_pair = [
+                        o for o in st.session_state.compare_pair
+                        if o.get("name") != org.get("name")
+                    ]
+                    st.rerun()
+
+# LEFT COLUMN — Score Comparison
+with main_col:
+    st.tabs(["📊 Score Comparison"])
+
+    if len(st.session_state.compare_pair) == 0:
+        st.info("Search for organizations above and save them, then select 2 from the right column to compare.")
+
+    elif len(st.session_state.compare_pair) == 1:
+        st.info("Select one more org from your saved list on the right to compare.")
+
+    else:
+        org1 = st.session_state.compare_pair[0]
+        org2 = st.session_state.compare_pair[1]
+
+        st.text_input("Filter policy area shown in charts (optional)", placeholder="e.g. Climate")
+
+        col1, col2 = st.columns(2)
+
+        for col, org in [(col1, org1), (col2, org2)]:
+            with col:
+                org_id = org.get("org_id")
+
+                if org_id:
+                    try:
+                        r = requests.get(f"http://web-api:4000/organizations/{org_id}")
+                        details = r.json() if r.status_code == 200 else org
+                    except:
+                        details = org
                 else:
-                    if st.button("Save", key=f"save_{org['org_id']}", use_container_width=True):
-                        st.session_state.saved_orgs.append(org)
-                        st.rerun()
-    elif st.session_state.searched:
-        st.info("No results found. Try different filters.")
+                    details = org
 
-    if st.session_state.saved_orgs:
-        st.markdown("---")
-        st.markdown(f"**{len(st.session_state.saved_orgs)} org(s) saved to your comparison list.** "
-                    f"Go to the **Organization Comparison** page to compare them.")
+                st.markdown(f"#### {details.get('name', org['name'])}")
+                st.markdown(f"**Spend:** &nbsp; €{details.get('lobbying_cost', 0):,.0f}")
 
+                if org_id:
+                    activities = details.get("lobbying_activities", [])
+                    area_names = [a.get("eu_institution", "—") for a in activities[:3]]
+                    st.markdown(f"**Policy Areas:** &nbsp; {', '.join(area_names) if area_names else '—'}")
 
-# TAB 2 — Create New
-with tab_create:
-    st.markdown("### Create a New Organization")
-    st.write("Fill in the fields below to add a new organization to the database.")
+                    try:
+                        ml_r = requests.get(
+                            f"http://web-api:4000/organizations/{org_id}/influence-prediction"
+                        )
+                        if ml_r.status_code == 200:
+                            ml = ml_r.json()
+                            score = ml.get("influence_score", "—")
+                            cls = ml.get("influence_class", "")
+                            st.markdown(f"**ML Score:** &nbsp; `{score}` &nbsp; *{cls}*")
+                        else:
+                            st.markdown("**ML Score:** &nbsp; —")
+                    except:
+                        st.markdown("**ML Score:** &nbsp; *(backend not connected)*")
 
-    with st.form("create_org_form"):
-        c1, c2 = st.columns(2)
-        with c1:
-            name          = st.text_input("Organization Name *")
-            country       = st.selectbox("Country *", options=COUNTRIES, key="country_create")
-            lobbying_cost = st.number_input("Lobbying Cost (€)", min_value=0.0, step=1000.0)
-        with c2:
-            interest_represented = st.selectbox("Policy Area *", options=POLICY_AREAS, key="policy_create")
-            members_fte          = st.number_input("FTE Members", min_value=0, step=1)
-            lobbyfacts_url       = st.text_input("LobbyFacts URL", placeholder="https://...")
-
-        submitted = st.form_submit_button("Create Organization", type="primary", use_container_width=True)
-
-    if submitted:
-        if not name or not country or not interest_represented:
-            st.error("Please fill in all required fields (marked with *).")
-        else:
-            payload = {
-                "name":                 name,
-                "country_code":         country,
-                "lobbying_cost":        lobbying_cost,
-                "members_fte":          int(members_fte),
-                "interest_represented": interest_represented,
-            }
-            try:
-                resp = requests.post(f"{API_BASE}/organizations", json=payload)
-                if resp.status_code == 201:
-                    new_id = resp.json().get("org_id")
-                    st.success(f"✅ Organization **{name}** created successfully! (ID: {new_id})")
-                    payload["org_id"] = new_id
-                    st.session_state.saved_orgs.append(payload)
+                    expenditures = details.get("expenditures", [])
+                    if expenditures:
+                        df = pd.DataFrame(expenditures)
+                        if "year" in df.columns and "amount_eur" in df.columns:
+                            df = df[["year", "amount_eur"]].dropna().sort_values("year")
+                            st.bar_chart(df.set_index("year")["amount_eur"], use_container_width=True)
+                    else:
+                        st.caption("No expenditure data available for chart.")
                 else:
-                    st.error(f"Failed to create organization. Server response: {resp.status_code}")
-            except requests.exceptions.ConnectionError:
-                st.warning("⚠️ Backend not connected yet.")
+                    st.markdown(f"**EP Meetings:** &nbsp; {org.get('meetings', '—')}")
+                    st.caption("Saved from the Meeting Prediction scatter plot.")

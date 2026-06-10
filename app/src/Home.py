@@ -12,8 +12,15 @@ from modules.nav import SideBarLinks
 
 st.set_page_config(layout='wide')
 
-st.session_state['authenticated'] = False
-
+# Replace lines 15-25 with this:
+if 'authenticated' not in st.session_state:
+    st.session_state['authenticated'] = False
+if 'saved_comparisons' not in st.session_state:
+    st.session_state['saved_comparisons'] = []
+if 'saved_orgs' not in st.session_state:
+    st.session_state['saved_orgs'] = []
+if 'compare_pair' not in st.session_state:
+    st.session_state['compare_pair'] = []
 SideBarLinks(show_home=True)
 
 logger.info("Loading the Home page of the app")
