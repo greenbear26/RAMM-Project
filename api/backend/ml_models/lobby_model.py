@@ -145,7 +145,7 @@ def predict(lobbying_cost, ep_passes, members_fte, country, interest):
                           interest_0, interest_1]) - means) / stds
     
     # [1, x1, x2] . [intercept, b1, b2]
-    input_vec = np.array([x_scaled[0], x_scaled[1], x_scaled[2], x_scaled[3], x_scaled[4], x_scaled[5]])
+    input_vec = np.array([1.0, x_scaled[0], x_scaled[1], x_scaled[2], x_scaled[3], x_scaled[4], x_scaled[5]])
     prediction = float(params.T @ input_vec)
     actual_prediction = np.exp(prediction)  # reverse the log transformation to get back to original scale
     current_app.logger.info(
