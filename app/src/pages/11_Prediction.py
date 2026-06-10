@@ -31,9 +31,13 @@ def load_lobbyfacts():
 
 df_lobbyfacts = load_lobbyfacts()
 
-# Session state for saved comparisons
+# Session state
 if "saved_comparisons" not in st.session_state:
     st.session_state.saved_comparisons = []
+if "prediction_result" not in st.session_state:
+    st.session_state.prediction_result = None
+if "prediction_inputs" not in st.session_state:
+    st.session_state.prediction_inputs = None
 
 country_options = [
     "Austria", "Belgium", "Bulgaria", "Croatia", "Cyprus", "Czech Republic",
@@ -96,113 +100,112 @@ if submitted:
         st.error(f"Prediction request failed: {last_error}")
     else:
         result = response.json()
-        prediction = result["prediction"]
+        # Store result in session state so it persists after Save button clicks
+        st.session_state.prediction_result = result["prediction"]
+        st.session_state.prediction_inputs = {
+            "lobbying_cost": lobbying_cost,
+            "ep_passes": ep_passes,
+            "members_fte": members_fte,
+            "country": country,
+            "interest": interest,
+        }
 
+# Show results if we have a prediction stored
+if st.session_state.prediction_result is not None:
+    prediction = st.session_state.prediction_result
+    inputs = st.session_state.prediction_inputs
+
+    st.divider()
+    st.subheader("Prediction Result")
+
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        st.metric("Predicted EP Meetings", f"{prediction:.1f}")
+    with c2:
+        st.metric("Lobbying Cost", f"€{inputs['lobbying_cost']:,.0f}")
+    with c3:
+        st.metric("EP Passes", f"{int(inputs['ep_passes'])}")
+
+    st.caption(f"Interest: {inputs['interest']}  ·  Country: {inputs['country']}  ·  Members FTE: {inputs['members_fte']}")
+
+    # Scatter plot
+    st.divider()
+    st.subheader("How does your organization compare?")
+
+    if df_lobbyfacts is not None:
+        df_plot = df_lobbyfacts[
+            (df_lobbyfacts['Lobbying cost'] > 0) &
+            (df_lobbyfacts['Meetings'] > 0)
+        ].copy()
+
+        df_plot = df_plot.rename(columns={
+            'Lobbying cost': 'lobbying_cost',
+            'Meetings': 'meetings',
+            'Name': 'name',
+        })
+
+        df_plot = df_plot[['name', 'lobbying_cost', 'meetings']].dropna()
+
+        fig = px.scatter(
+            df_plot,
+            x='lobbying_cost',
+            y='meetings',
+            hover_name='name',
+            log_x=True,
+            log_y=True,
+            labels={
+                'lobbying_cost': 'Lobbying Cost (€, log scale)',
+                'meetings': 'EP Meetings (log scale)',
+            },
+            opacity=0.45,
+            color_discrete_sequence=['#4a90d9'],
+        )
+
+        fig.add_trace(go.Scatter(
+            x=[inputs['lobbying_cost']],
+            y=[prediction],
+            mode='markers+text',
+            marker=dict(size=18, color='#e63946', symbol='star', line=dict(width=1, color='white')),
+            text=['Your Org'],
+            textposition='top center',
+            name='Your Organization',
+            hovertemplate=f'<b>Your Organization</b><br>Cost: €{inputs["lobbying_cost"]:,.0f}<br>Predicted Meetings: {prediction:.1f}<extra></extra>',
+        ))
+
+        fig.update_layout(height=480, margin=dict(t=20, b=40))
+        st.plotly_chart(fig, use_container_width=True)
+
+        # Similar orgs list
         st.divider()
-        st.subheader("Prediction Result")
+        st.subheader("Similar organizations")
+        st.write("Save any of these to compare on the Organization Comparison page.")
 
-        c1, c2, c3 = st.columns(3)
-        with c1:
-            st.metric("Predicted EP Meetings", f"{prediction:.1f}")
-        with c2:
-            st.metric("Lobbying Cost", f"€{lobbying_cost:,.0f}")
-        with c3:
-            st.metric("EP Passes", f"{int(ep_passes)}")
+        similar = df_plot[
+            (df_plot['lobbying_cost'] > inputs['lobbying_cost'] * 0.5) &
+            (df_plot['lobbying_cost'] < inputs['lobbying_cost'] * 2.0)
+        ].head(5)
 
-        st.caption(f"Interest: {interest}  ·  Country: {country}  ·  Members FTE: {members_fte}")
-
-        # Scatter plot
-        st.divider()
-        st.subheader("How does your organization compare?")
-        st.write("Click any dot to save that organization to your comparisons.")
-
-        if df_lobbyfacts is not None:
-            df_plot = df_lobbyfacts[
-                (df_lobbyfacts['Lobbying cost'] > 0) &
-                (df_lobbyfacts['Meetings'] > 0)
-            ].copy()
-
-            df_plot = df_plot.rename(columns={
-                'Lobbying cost': 'lobbying_cost',
-                'Meetings': 'meetings',
-                'Name': 'name',
-            })
-
-            df_plot = df_plot[['name', 'lobbying_cost', 'meetings']].dropna()
-
-            fig = px.scatter(
-                df_plot,
-                x='lobbying_cost',
-                y='meetings',
-                hover_name='name',
-                log_x=True,
-                log_y=True,
-                labels={
-                    'lobbying_cost': 'Lobbying Cost (€, log scale)',
-                    'meetings': 'EP Meetings (log scale)',
-                },
-                opacity=0.45,
-                color_discrete_sequence=['#4a90d9'],
-            )
-
-            # Add predicted org as a red star
-            fig.add_trace(go.Scatter(
-                x=[lobbying_cost],
-                y=[prediction],
-                mode='markers+text',
-                marker=dict(size=18, color='#e63946', symbol='star', line=dict(width=1, color='white')),
-                text=['Your Org'],
-                textposition='top center',
-                name='Your Organization',
-                hovertemplate=f'<b>Your Organization</b><br>Cost: €{lobbying_cost:,.0f}<br>Predicted Meetings: {prediction:.1f}<extra></extra>',
-            ))
-
-            fig.update_layout(
-                height=480,
-                margin=dict(t=20, b=40),
-            )
-
-            selected = st.plotly_chart(fig, use_container_width=True, on_select='rerun', key='scatter')
-
-            # Handle click to save to comparisons
-            if selected and selected.get('selection') and selected['selection'].get('points'):
-                pts = selected['selection']['points']
-                if pts:
-                    clicked_idx = pts[0].get('point_index')
-                    if clicked_idx is not None and clicked_idx < len(df_plot):
-                        clicked_org = df_plot.iloc[clicked_idx]
-                        org_entry = {
-                            'name': clicked_org['name'],
-                            'lobbying_cost': clicked_org['lobbying_cost'],
-                            'meetings': clicked_org['meetings'],
+        if similar.empty:
+            st.info("No similar organizations found in this cost range.")
+        else:
+            for _, row in similar.iterrows():
+                col_a, col_b = st.columns([4, 1])
+                with col_a:
+                    st.write(f"**{row['name']}** — €{row['lobbying_cost']:,.0f} · {row['meetings']:.0f} meetings")
+                with col_b:
+                    if st.button("Save", key=f"save_{row['name']}"):
+                        entry = {
+                            'name': row['name'],
+                            'lobbying_cost': row['lobbying_cost'],
+                            'meetings': row['meetings'],
                         }
-                        existing_names = [o['name'] for o in st.session_state.saved_comparisons]
-                        if org_entry['name'] not in existing_names:
+                        existing = [o['name'] for o in st.session_state.saved_comparisons]
+                        if entry['name'] not in existing:
                             if len(st.session_state.saved_comparisons) >= 2:
                                 st.session_state.saved_comparisons.pop(0)
-                            st.session_state.saved_comparisons.append(org_entry)
-                            st.success(f"Saved **{org_entry['name']}** to comparisons.")
+                            st.session_state.saved_comparisons.append(entry)
+                            st.success(f"Saved **{entry['name']}** — go to Organization Comparison to compare.")
                         else:
-                            st.info(f"**{org_entry['name']}** is already saved.")
-
-            # Save predicted org button
-            st.divider()
-            if st.button("Save my predicted organization to comparisons"):
-                entry = {
-                    'name': f'Your Org (predicted, €{lobbying_cost:,.0f})',
-                    'lobbying_cost': lobbying_cost,
-                    'meetings': prediction,
-                }
-                existing_names = [o['name'] for o in st.session_state.saved_comparisons]
-                if entry['name'] not in existing_names:
-                    if len(st.session_state.saved_comparisons) >= 2:
-                        st.session_state.saved_comparisons.pop(0)
-                    st.session_state.saved_comparisons.append(entry)
-                    st.success("Saved! Head to **Organization Comparison** to compare.")
-                else:
-                    st.info("Already saved.")
-        else:
-            st.info("Scatter plot unavailable — lobbyfacts data not found.")
-
-
-
+                            st.info("Already saved.")
+    else:
+        st.info("Scatter plot unavailable — lobbyfacts data not found.")
