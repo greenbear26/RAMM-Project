@@ -4,7 +4,6 @@
 CREATE DATABASE IF NOT EXISTS ramm_lobbying;
 USE ramm_lobbying;
 
--- country_indicator: use ISO code as the primary key so foreign keys can reference it
 CREATE TABLE IF NOT EXISTS country_indicator (
   country VARCHAR(100),
   country_code VARCHAR(3) NOT NULL PRIMARY KEY,
@@ -152,21 +151,29 @@ CREATE TABLE IF NOT EXISTS party_model_scaler (
 );
 
 CREATE TABLE IF NOT EXISTS party_info (
-   party_name_english VARCHAR(100) NOT NULL PRIMARY KEY
-  ,country_name       VARCHAR(14) NOT NULL
-  ,populist           BIT  NOT NULL
-  ,populist_bl        BIT  NOT NULL
-  ,farright           BIT  NOT NULL
-  ,farright_bl        BIT  NOT NULL
-  ,farleft            BIT  NOT NULL
-  ,farleft_bl         BIT  NOT NULL
-  ,eurosceptic        BIT  NOT NULL
-  ,eurosceptic_bl     BIT  NOT NULL
-  ,in_parliament      NUMERIC(3,1) NOT NULL
-  ,party_id           NUMERIC(6,1) NOT NULL
-  ,family_name        VARCHAR(19) NOT NULL
-  ,left_right         NUMERIC(6,4) NOT NULL
-  ,state_market       NUMERIC(6,4) NOT NULL
-  ,liberty_authority  NUMERIC(6,4) NOT NULL
-  ,eu_anti_pro        NUMERIC(6,4) NOT NULL
+    party_name_english  VARCHAR(100)    NOT NULL PRIMARY KEY,
+    country_name        VARCHAR(14)     NOT NULL,
+    populist            BIT             NOT NULL,
+    populist_bl         BIT             NOT NULL,
+    farright            BIT             NOT NULL,
+    farright_bl         BIT             NOT NULL,
+    farleft             BIT             NOT NULL,
+    farleft_bl          BIT             NOT NULL,
+    eurosceptic         BIT             NOT NULL,
+    eurosceptic_bl      BIT             NOT NULL,
+    in_parliament       NUMERIC(3,1)    NOT NULL,
+    party_id            NUMERIC(6,1)    NOT NULL,
+    family_name         VARCHAR(19)     NOT NULL,
+    left_right          NUMERIC(6,4)    NOT NULL,
+    state_market        NUMERIC(6,4)    NOT NULL,
+    liberty_authority   NUMERIC(6,4)    NOT NULL,
+    eu_anti_pro         NUMERIC(6,4)    NOT NULL,
+    ep_party            VARCHAR(50)
+);
+
+CREATE TABLE mytable(
+   group                 VARCHAR(12) NOT NULL PRIMARY KEY
+  ,lobbyists             VARCHAR(134559) NOT NULL
+  ,meetings_per_lobbyist VARCHAR(12968) NOT NULL
+  ,total_meetings        INTEGER  NOT NULL
 );
