@@ -4,7 +4,6 @@ import os
 import logging
 
 from backend.db_connection import init_app as init_db
-from backend.simple.simple_routes import simple_routes
 from backend.lobby_routes import ml_bp
 from backend.ngos.ngo_routes import ngo_bp
 

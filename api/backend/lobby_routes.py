@@ -5,8 +5,8 @@ from flask import Blueprint, jsonify, request, current_app
 from backend.db_connection import get_db
 from backend.utils import error_response
 from mysql.connector import Error
-from ml_models.lobby_model import predict as lobby_predict
-from ml_models.party_model import predict as party_predict
+from backend.ml_models.lobby_model import predict as lobby_predict
+from backend.ml_models.party_model import predict as party_predict
 
 organizations_bp = Blueprint("organizations", __name__)
 countries_bp     = Blueprint("countries", __name__)

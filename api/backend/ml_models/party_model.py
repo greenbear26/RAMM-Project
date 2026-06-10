@@ -121,6 +121,6 @@ def predict(populist, populist_bl, farright, farright_bl, farleft, farleft_bl,
     x_scaled = (np.array(X) - means) / stds
     
     # Apply logistic function to the linear combination of inputs and parameters
-    linear_combination = np.dot(params, x_scaled)
+    linear_combination = np.dot(params, np.array([1.0] + list(x_scaled)))  # add intercept term
     prediction = 1 / (1 + np.exp(-linear_combination))
     return prediction
