@@ -73,7 +73,7 @@ CREATE TABLE IF NOT EXISTS party_info (
     farleft_bl          BIT             NOT NULL,
     eurosceptic         BIT             NOT NULL,
     eurosceptic_bl      BIT             NOT NULL,
-    in_parliament       NUMERIC(3,1)    NOT NULL,
+    in_parliament       BIT             NOT NULL,
     family_name         VARCHAR(19)     NOT NULL,
     left_right          NUMERIC(6,4)    NOT NULL,
     state_market        NUMERIC(6,4)    NOT NULL,

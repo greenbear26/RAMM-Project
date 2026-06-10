@@ -15,3 +15,13 @@ if st.button('Predict party parliament probability',
              type='primary',
              use_container_width=True):
     st.switch_page('pages/21_Party_Prediction.py')
+
+if st.button('Explore Party Political Leanings',
+             type='primary',
+             use_container_width=True):
+    st.switch_page('pages/22_Party_Learnings.py')
+
+if st.button('Party Groups to Lobbying',
+             type='primary',
+             use_container_width=True):
+    st.switch_page('pages/23_Party_Lobbyists.py')

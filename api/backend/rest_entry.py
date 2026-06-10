@@ -10,6 +10,7 @@ from backend.org_routes import organizations_bp
 from backend.country_routes import countries_bp
 from backend.users_routes import users_bp
 from backend.ml_routes import ml_bp
+from backend.party_routes import parties_bp
 
 
 def create_app():
@@ -46,5 +47,6 @@ def create_app():
     app.register_blueprint(countries_bp)
     app.register_blueprint(users_bp)
     app.register_blueprint(ml_bp)
+    app.register_blueprint(parties_bp)
 
     return app
