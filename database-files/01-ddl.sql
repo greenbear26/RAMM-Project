@@ -40,8 +40,14 @@ CREATE TABLE IF NOT EXISTS app_user (
     updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+-- organization
+--   * org_id is AUTO_INCREMENT so new orgs created via POST /organizations
+--     get an id automatically. The loader can still insert explicit ids
+--     (1..N) for the CSV rows; AUTO_INCREMENT picks up after the max.
+--   * country_code is VARCHAR(100) to hold full country names
+--     (e.g. "Czech Republic"), not just short ISO codes.
 CREATE TABLE IF NOT EXISTS organization (
-    org_id                  INTEGER         PRIMARY KEY,
+    org_id                  INTEGER         PRIMARY KEY AUTO_INCREMENT,
     name                    VARCHAR(255)    NOT NULL,
     lobbyfacts_url          VARCHAR(500),
     members_eu              INTEGER,
@@ -49,7 +55,7 @@ CREATE TABLE IF NOT EXISTS organization (
     lobbying_cost           FLOAT,
     log_lobbying_cost       FLOAT,
     interest_represented    VARCHAR(255),
-    country_code            VARCHAR(10),
+    country_code            VARCHAR(100),
     industry_id             INTEGER,
     created_at              DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at              DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
