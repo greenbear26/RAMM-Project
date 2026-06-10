@@ -120,7 +120,7 @@ with main_col:
             name1 = d1["details"].get("name", org1["name"])
             name2 = d2["details"].get("name", org2["name"])
 
-            # ── Chart 1: Side-by-side spend, meetings, EP passes ──────────────
+            # Chart 1: Side-by-side spend, meetings, EP passes
             st.markdown("### At a Glance")
             spend1  = d1["details"].get("lobbying_cost") or 0
             spend2  = d2["details"].get("lobbying_cost") or 0
@@ -149,7 +149,7 @@ with main_col:
 
             st.divider()
 
-            # ── Chart 2: ML Score gauges ──────────────────────────────────────
+            # Chart 2: ML Score gauges 
             st.markdown("### ML Influence Score")
             g1, g2 = st.columns(2)
 
@@ -186,7 +186,7 @@ with main_col:
 
             st.divider()
 
-            # ── Chart 3: Policy area overlap ──────────────────────────────────
+            # Chart 3: Policy area overlap 
             st.markdown("### Policy Area Overlap")
 
             areas1 = {a.get("policy_area") for a in d1["details"].get("lobbying_activities", []) if a.get("policy_area")}
@@ -243,7 +243,7 @@ with main_col:
 
             st.divider()
 
-            # ── Chart 4: Efficiency — lobbying cost per EP meeting ────────────
+            #  Chart 4: Efficiency — lobbying cost per EP meeting 
             st.markdown("### Lobbying Efficiency")
 
             # Cast to float to handle MySQL Decimal and None types safely
