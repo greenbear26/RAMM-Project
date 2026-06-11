@@ -42,7 +42,7 @@ with saved_col:
     st.caption("Select up to 2 orgs to compare.")
 
     if not all_saved:
-        st.info("No saved orgs yet. Use the **Add Organization** page or click a dot on the **Meeting Prediction** page.")
+        st.info("No saved orgs yet. Use the **Search Organizations** page or click through the **ML Influence Prediction** page to save orgs there.")
     else:
         for org in all_saved:
             in_compare = org.get("name") in [o.get("name") for o in st.session_state.compare_pair]
@@ -113,9 +113,9 @@ with main_col:
                         r = requests.get(f"http://web-api:4000/organizations/{org_id}")
                         if r.status_code == 200:
                             details = r.json()
-                        pair_data.append({"details": details})
                     except Exception:
                         pass
+                pair_data.append({"details": details})
 
             d1, d2 = pair_data[0], pair_data[1]
             name1 = d1["details"].get("name", org1["name"])
@@ -153,8 +153,8 @@ with main_col:
             # Chart 3: Policy area overlap 
             st.markdown("### Policy Area Overlap")
 
-            areas1 =  set(ast.literal_eval(d1["details"].get("policy_areas")))
-            areas2 =  set(ast.literal_eval(d2["details"].get("policy_areas")))
+            areas1 = set(ast.literal_eval(d1["details"].get("policy_areas") or "[]"))
+            areas2 = set(ast.literal_eval(d2["details"].get("policy_areas") or "[]"))
             
             shared    = sorted(areas1 & areas2)
 

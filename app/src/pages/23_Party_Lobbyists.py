@@ -4,8 +4,8 @@ logger = logging.getLogger(__name__)
 import streamlit as st
 import requests
 import ast
-import json
 import pandas as pd
+import plotly.express as px
 from modules.nav import SideBarLinks
 
 st.set_page_config(layout='wide')
@@ -38,21 +38,48 @@ if st.button("Search", type="primary", use_container_width=True):
                 else:
                     info = data[0]
 
-                    lobbyists         = ast.literal_eval(info["lobbyists"])
-                    meetings          = ast.literal_eval(info["meetings_per_lobbyist"])
-                    total_meetings    = int(info["total_meetings"])
+                    lobbyists      = ast.literal_eval(info["lobbyists"])
+                    meetings       = ast.literal_eval(info["meetings_per_lobbyist"])
+                    total_meetings = int(info["total_meetings"])
 
                     st.markdown(f"### {selected_ep_party} — {total_meetings} total meetings")
                     st.markdown("---")
 
-                    # Store Dataframe of lobbysits and their corresponding meetings in columns
                     df = pd.DataFrame([{
                         "Lobbyist": lobbyist,
                         "Meetings": meeting
                     } for lobbyist, meeting in zip(lobbyists, meetings)]).sort_values("Meetings", ascending=False, ignore_index=True)
 
-                    st.dataframe(df)
+                    st.markdown("#### Top 20 Lobbyists by Meeting Count")
+                    fig = px.bar(
+                        df.head(20),
+                        x="Meetings",
+                        y="Lobbyist",
+                        orientation="h",
+                    )
+                    fig.update_layout(
+                        yaxis=dict(autorange="reversed"),
+                        plot_bgcolor="rgba(0,0,0,0)",
+                        paper_bgcolor="rgba(0,0,0,0)",
+                        font=dict(family="sans-serif", size=13),
+                        margin=dict(l=20, r=20, t=20, b=20),
+                        xaxis=dict(showgrid=True, gridcolor="#251876"),
+                        yaxis_title="",
+                        xaxis_title="Number of Meetings",
+                    )
+                    fig.update_traces(marker_color="#b08850")
+                    st.plotly_chart(fig, use_container_width=True)
 
+                    st.markdown("---")
+                    with st.expander("View full table"):
+                        st.dataframe(df, use_container_width=True)
+
+                    st.download_button(
+                        label="⬇ Download as CSV",
+                        data=df.to_csv(index=False),
+                        file_name=f"{selected_ep_party}_lobbyists.csv",
+                        mime="text/csv",
+                    )
             else:
                 st.error("Failed to fetch lobby info.")
         except requests.exceptions.ConnectionError:
