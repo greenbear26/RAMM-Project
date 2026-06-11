@@ -20,23 +20,16 @@ then head to the **Organization Comparison** page to compare two organizations h
 
 if "saved_orgs" not in st.session_state:
     st.session_state.saved_orgs = []
+    
 
 POLICY_AREAS = [
-    "All Policy Areas",
-    "Agriculture",
-    "Artificial Intelligence",
-    "Climate & Energy",
-    "Defence & Security",
-    "Digital Markets",
-    "Finance & Banking",
-    "Healthcare",
-    "Other",
-    "Transport",
+    "All Policy Areas", "Agriculture", "Artificial Intelligence",
+    "Climate & Energy", "Defence & Security", "Digital Markets",
+    "Finance & Banking", "Healthcare", "Other", "Transport",
 ]
 
 COUNTRIES = [
-    "All Countries",
-    "Austria", "Belgium", "Bulgaria", "Croatia", "Cyprus",
+    "All Countries", "Austria", "Belgium", "Bulgaria", "Croatia", "Cyprus",
     "Czech Republic", "Denmark", "Estonia", "Finland", "France",
     "Germany", "Greece", "Hungary", "Ireland", "Italy",
     "Latvia", "Lithuania", "Luxembourg", "Malta", "Netherlands",
@@ -73,60 +66,62 @@ if search_btn:
         st.warning("Backend not connected.")
         st.session_state.org_results = []
 
-    results = st.session_state.get("org_results", [])
-
     st.divider()
     st.markdown(f"#### Results for **{selected_policy}** in **{selected_country}**")
     st.markdown("Maximum 1000 results shown. Use filters to narrow down search and find specific organizations.")
 
-    tab_results, tab_saved = st.tabs([
-        f"Results ({len(results)})",
-        f"Saved ({len(st.session_state.saved_orgs)})",
-    ])
+results = st.session_state.get("org_results", [])
 
-    with tab_results:
-        if results:
-            saved_names = {o.get("name") for o in st.session_state.saved_orgs}
-            scroll = st.container(height=520, border=False)
-            with scroll:
-                for org in results:
-                    already = org.get("name") in saved_names
-                    r1, r2, r3 = st.columns([4, 2, 1])
-                    with r1:
-                        st.markdown(f"**{org['name']}** - {org.get('country_name', '—')}")
-                        # st.markdown(f"**{org.get('country_name', '—')}**")
-                        st.metric("Lobbying Cost", org.get('lobbying_cost', 0), format="euro")
-                        policy_areas = ast.literal_eval(org.get("policy_areas", "[]"))
-                        st.markdown(", ".join(policy_areas) if policy_areas else "No policy area data")
-                    with r2:
-                        st.metric(f"Full time Employees", org.get("members_fte", "—"))
-                        st.metric(f"European Commission Meetings", org.get("ep_meetings", "—"))
-                    with r3:
-                        if already:
-                            st.caption("Saved")
-                        else:
-                            if st.button("Save", key=f"save_{org['org_id']}"):
-                                st.session_state.saved_orgs.append(org)
-                                st.rerun()
-                    st.divider()
-        else:
-            st.info("No organizations found. Try adjusting the filters.")
+tab_results, tab_saved = st.tabs([
+    f"Results ({len(results)})",
+    f"Saved ({len(st.session_state.saved_orgs)})",
+])
 
-    with tab_saved:
-        if not st.session_state.saved_orgs:
-            st.info("No saved organizations yet. Search and save organizations from the Results tab.")
-        else:
-            scroll_saved = st.container(height=520, border=False)
-            with scroll_saved:
-                for i, org in enumerate(st.session_state.saved_orgs):
-                    s1, s2, s3 = st.columns([4, 2, 1])
-                    with s1:
-                        st.markdown(f"**{org.get('name', '—')}**")
-                        st.caption(f"{org.get('country_name', '—')} · €{org.get('lobbying_cost', 0):,.0f}")
-                    with s2:
-                        st.markdown(f"{org.get('interest_represented', '—')}")
-                    with s3:
-                        if st.button("Remove", key=f"remove_{i}"):
-                            st.session_state.saved_orgs.pop(i)
+with tab_results:
+    if results:
+        saved_names = {o.get("name") for o in st.session_state.saved_orgs}
+        scroll = st.container(height=520, border=False)
+        with scroll:
+            for org in results[:50]:
+                already = org.get("name") in saved_names
+                r1, r2, r3 = st.columns([4, 2, 1])
+                with r1:
+                    st.markdown(f"**{org['name']}** — {org.get('country_name', '—')}")
+                    st.caption(f"€{org.get('lobbying_cost', 0):,.0f}")
+                    policy_areas = ast.literal_eval(org.get("policy_areas") or "[]")
+                    st.caption(", ".join(policy_areas) if policy_areas else "No policy area data")
+                with r2:
+                    st.caption(f"FTE: {org.get('members_fte', '—')}")
+                    st.caption(f"EP Meetings: {org.get('ep_meetings', '—')}")
+                with r3:
+                    if already:
+                        st.caption("✅ Saved")
+                    else:
+                        if st.button("Save", key=f"save_{org['org_id']}"):
+                            st.session_state.saved_orgs.append(org)
                             st.rerun()
-                    st.divider()
+                st.divider()
+    else:
+        st.info("No organizations found. Try adjusting the filters.")
+
+with tab_saved:
+    if not st.session_state.saved_orgs:
+        st.write("No saved organizations yet. Search and save organizations from the Results tab.")
+    else:
+        if st.button("Remove All", type="secondary"):
+            st.session_state.saved_orgs = []
+            st.rerun()
+        scroll_saved = st.container(height=520, border=False)
+        with scroll_saved:
+            for i, org in enumerate(st.session_state.saved_orgs):
+                s1, s2, s3 = st.columns([4, 2, 1])
+                with s1:
+                    st.markdown(f"**{org.get('name', '—')}**")
+                    st.caption(f"{org.get('country_name', '—')} · €{org.get('lobbying_cost', 0):,.0f}")
+                with s2:
+                    st.markdown(f"{org.get('interest_represented', '—')}")
+                with s3:
+                    if st.button("Remove", key=f"remove_{i}_{org.get('org_id')}"):
+                        st.session_state.saved_orgs.pop(i)
+                        st.rerun()
+                st.divider()

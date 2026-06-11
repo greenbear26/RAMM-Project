@@ -142,7 +142,7 @@ if st.session_state.prediction_result is not None:
 
     st.divider()
     st.subheader("Prediction Result")
-
+               
     c1, c2, c3 = st.columns(3)
     with c1:
         st.metric("Predicted EP Meetings", f"{prediction:.1f}")
