@@ -8,18 +8,15 @@
 
 
 [client]
-# Turning the default sidebar navigation off so we 
-# can use our own
 showSidebarNavigation = false
 
 [theme]
-# Setting some basic config options related to the theme of the app
-base="dark"
-primaryColor="#4A90D9"
-backgroundColor="#0E1117"
-secondaryBackgroundColor="#1A1F2E"
-textColor="#FFFFFF"
-font="sans serif"
+base="light"
+primaryColor="#C4956A"
+backgroundColor="#FFFFFF"
+secondaryBackgroundColor="#E8E6E0"
+textColor="#1A1A2E"
+font="serif"
 
 [server]
 runOnSave = true
