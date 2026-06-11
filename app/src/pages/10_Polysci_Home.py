@@ -18,8 +18,8 @@ if st.button('View Organization Directory',
              use_container_width=True):
     st.switch_page('pages/14_Org_Directory.py')
 
-st.caption("Add a new lobbying organization to the database with details on their policy focus, country, and estimated lobbying spend.")
-if st.button('Add New Organization',
+st.caption("Search and save lobbying organizations by country and policy area to compare later.")
+if st.button('Search Organizations',
              type='primary',
              use_container_width=True):
     st.switch_page('pages/15_Add_Org.py')
