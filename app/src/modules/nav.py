@@ -30,7 +30,7 @@ def world_bank_viz_nav():
 
 
 def map_demo_nav():
-    st.sidebar.page_link("pages/02_Explore.py", label="Explore Page", icon="🔎️")
+    st.sidebar.page_link("pages/02_Explore.py", label="Explore Facts", icon="🔎️")
 
 
 # Role: Poly-Sci Researcher
@@ -45,12 +45,13 @@ def prediction_nav():
         "pages/11_Prediction.py", label="ML Influence Prediction", icon="🤖"
     )
 
+def add_ngo_nav():
+    st.sidebar.page_link("pages/15_Add_Org.py", label="Add New Organization", icon="➕")
+
 def ngo_directory_nav():
     st.sidebar.page_link("pages/14_Org_Directory.py", label="Organization Comparison", icon="📊")
 
 
-def add_ngo_nav():
-    st.sidebar.page_link("pages/15_Add_Org.py", label="Add New Organization", icon="➕")
 
 
 # Role: Political Journalist
@@ -100,8 +101,8 @@ def SideBarLinks(show_home=False):
 
         if st.session_state["role"] == "usaid_worker":
             usaid_worker_home_nav()
-            ngo_directory_nav()
             add_ngo_nav()
+            ngo_directory_nav()
             prediction_nav()
             # api_test_nav()
             # classification_nav()
