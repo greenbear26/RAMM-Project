@@ -15,8 +15,10 @@ CREATE TABLE IF NOT EXISTS country_indicator (
 -- ok
 CREATE TABLE IF NOT EXISTS app_user (
     user_id         INTEGER         PRIMARY KEY,
+    first_name      VARCHAR(100)    NOT NULL,
+    last_name       VARCHAR(100),
     email           VARCHAR(255)    NOT NULL,
-    password_hash   VARCHAR(255)    NOT NULL,
+    password_hash   VARCHAR(255),
     role            VARCHAR(100),
     is_active       BOOLEAN         NOT NULL DEFAULT TRUE,
     created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,

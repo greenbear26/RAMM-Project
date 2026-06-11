@@ -9,6 +9,28 @@ from mysql.connector import Error
 users_bp = Blueprint("users", __name__)
 
 
+# GET /users — list users, optionally filtered by role
+@users_bp.route("/users", methods=["GET"])
+def get_users():
+    current_app.logger.info("GET /users")
+    try:
+        role = request.args.get("role")
+        with get_db().cursor(dictionary=True) as cursor:
+            if role:
+                cursor.execute(
+                    "SELECT user_id, first_name, last_name, email, role FROM app_user WHERE role = %s AND is_active = TRUE ORDER BY first_name",
+                    (role,)
+                )
+            else:
+                cursor.execute(
+                    "SELECT user_id, first_name, last_name, email, role FROM app_user WHERE is_active = TRUE ORDER BY role, first_name"
+                )
+            return jsonify(cursor.fetchall()), 200
+    except Error as e:
+        current_app.logger.error(f"Database error in get_users: {e}")
+        return error_response(str(e))
+
+
 # Route 8 — GET /preferences
 @users_bp.route("/preferences", methods=["GET"])
 def get_preferences():

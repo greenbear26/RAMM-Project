@@ -61,13 +61,33 @@ with st.form("lobby_prediction_form"):
     col1, col2 = st.columns(2)
 
     with col1:
-        lobbying_cost = st.number_input("Lobbying cost (€)", min_value=0.0, step=1000.0, value=10000.0)
-        ep_passes = st.number_input("EP passes", min_value=0.0, step=1.0, value=10.0)
-        members_fte = st.number_input("Members FTE", min_value=0.0, step=1.0, value=25.0)
+        lobbying_cost = st.number_input(
+            "Lobbying cost (€)",
+            min_value=0.0, step=1000.0, value=10000.0,
+            help="Total annual budget the organization spends on EU lobbying activities, including staff, events, and external consultants.",
+        )
+        ep_passes = st.number_input(
+            "EP passes",
+            min_value=0.0, step=1.0, value=10.0,
+            help="European Parliament access passes held by the organization. These badges allow staff to enter EP buildings and directly engage with MEPs and their offices.",
+        )
+        members_fte = st.number_input(
+            "Members / FTE",
+            min_value=0.0, step=1.0, value=25.0,
+            help="Full-time equivalent (FTE) staff or members dedicated to lobbying. For trade associations this is the number of member organizations; for companies it is the number of in-house lobbyists.",
+        )
 
     with col2:
-        country = st.selectbox("Country", country_options)
-        interest = st.selectbox("Interest representation", interest_options)
+        country = st.selectbox(
+            "Country",
+            country_options,
+            help="The EU member state where the organization is headquartered. Proximity to Brussels and national political weight can affect access to EU institutions.",
+        )
+        interest = st.selectbox(
+            "Interest representation",
+            interest_options,
+            help="How the organization describes its lobbying purpose: acting for clients (consultancies), representing its own/members' interests (trade bodies, companies), or a non-commercial mission (NGOs, think-tanks).",
+        )
 
     submitted = st.form_submit_button("Predict")
 
