@@ -55,7 +55,6 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# Section label
 st.markdown("""
 <p style="text-align:center; color:#64748B; font-size:12px; letter-spacing:2px;
    text-transform:uppercase; font-weight:600; margin-bottom:16px;">
@@ -63,10 +62,15 @@ st.markdown("""
 </p>
 """, unsafe_allow_html=True)
 
+
 # Card style
 CARD_STYLE = """
 background: #1E293B;
 border: 1px solid #334155;
+border-radius: 10px;
+padding: 14px 16px;
+margin-bottom: 10px;
+height: 150px;
 border-radius: 12px;
 padding: 18px 18px 14px 18px;
 margin-bottom: 10px;
@@ -76,7 +80,11 @@ overflow: hidden;
 
 c1, c2, c3 = st.columns(3)
 
+c1, c2, c3 = st.columns(3)
+
 with c1:
+    st.markdown(f'<div style="{CARD_STYLE}"><h3 style="color:#FFFFFF; margin:0 0 4px 0; font-size:15px; font-weight:700;">European Citizen</h3><p style="color:#94A3B8; font-size:11px; line-height:1.5; margin:0;">Explore who funds EU lobbying and which policy areas are most contested.</p></div>', unsafe_allow_html=True)
+    selected_citizen = st.selectbox("Select citizen", citizen_options, key="citizen_select", label_visibility="collapsed")
     st.markdown(f'<div style="{CARD_STYLE}"><h3 style="color:#FFFFFF; margin:0 0 6px 0; font-size:16px; font-weight:700;">European Citizen</h3><p style="color:#94A3B8; font-size:12px; line-height:1.6; margin:0;">Explore which organizations are shaping EU policy in your country. Understand who funds political lobbying and which policy areas are most contested.</p></div>', unsafe_allow_html=True)
     selected_citizen = st.selectbox("Select citizen", citizen_options, key="citizen_select", label_visibility="collapsed")
     if st.button("Login as Citizen", key="citizen_login", type="primary", use_container_width=True):
@@ -88,6 +96,8 @@ with c1:
         st.switch_page('pages/00_Citizen_Home.py')
 
 with c2:
+    st.markdown(f'<div style="{CARD_STYLE}"><h3 style="color:#FFFFFF; margin:0 0 4px 0; font-size:15px; font-weight:700;">Political Science Researcher</h3><p style="color:#94A3B8; font-size:11px; line-height:1.5; margin:0;">Compare lobbying organizations, run ML predictions, and analyse spending patterns.</p></div>', unsafe_allow_html=True)
+    selected_researcher = st.selectbox("Select researcher", researcher_options, key="researcher_select", label_visibility="collapsed")
     st.markdown(f'<div style="{CARD_STYLE}"><h3 style="color:#FFFFFF; margin:0 0 6px 0; font-size:16px; font-weight:700;">Political Science Researcher</h3><p style="color:#94A3B8; font-size:12px; line-height:1.6; margin:0;">Compare lobbying organizations side by side, run ML influence predictions, and analyse spending patterns across policy areas and EU institutions.</p></div>', unsafe_allow_html=True)
     selected_researcher = st.selectbox("Select researcher", researcher_options, key="researcher_select", label_visibility="collapsed")
     if st.button("Login as Researcher", key="researcher_login", type="primary", use_container_width=True):
@@ -99,6 +109,8 @@ with c2:
         st.switch_page('pages/10_Polysci_Home.py')
 
 with c3:
+    st.markdown(f'<div style="{CARD_STYLE}"><h3 style="color:#FFFFFF; margin:0 0 4px 0; font-size:15px; font-weight:700;">Political Party Journalist</h3><p style="color:#94A3B8; font-size:11px; line-height:1.5; margin:0;">Profile EU parties, predict parliament outcomes, and track populist movements.</p></div>', unsafe_allow_html=True)
+    selected_journalist = st.selectbox("Select journalist", journalist_options, key="journalist_select", label_visibility="collapsed")
     st.markdown(f'<div style="{CARD_STYLE}"><h3 style="color:#FFFFFF; margin:0 0 6px 0; font-size:16px; font-weight:700;">Political Party Journalist</h3><p style="color:#94A3B8; font-size:12px; line-height:1.6; margin:0;">Predict parliament seat outcomes, profile political parties across EU member states, and track how populist and far-right movements influence EU policy.</p></div>', unsafe_allow_html=True)
     selected_journalist = st.selectbox("Select journalist", journalist_options, key="journalist_select", label_visibility="collapsed")
     if st.button("Login as Journalist", key="journalist_login", type="primary", use_container_width=True):
@@ -109,8 +121,8 @@ with c3:
         logger.info(f"Logging in as Journalist: {selected_journalist}")
         st.switch_page('pages/20_Journalist_Home.py')
 
-# Footer
 st.markdown("""
+<div style="margin-top: 32px; text-align: center; color: #94A3B8; font-size: 11px;">
 <div style="margin-top: 32px; text-align: center; color: #94A3B8; font-size: 11px;">
     LobbyLens &nbsp;·&nbsp; EU Lobbying Transparency Platform &nbsp;·&nbsp;
     Data sourced from the EU Transparency Register &amp; LobbyFacts
