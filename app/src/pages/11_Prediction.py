@@ -27,7 +27,7 @@ API_BASE = "http://web-api:4000"
 def load_orgs_for_plot():
     try:
         resp = requests.get(f"{API_BASE}/organizations",
-                            params={"min_cost": 1, "limit": 2000}, timeout=10)
+                            params={"min_cost": 1, "limit": 20000}, timeout=10)
         if resp.status_code == 200:
             data = resp.json()
             df = pd.DataFrame(data)[["name", "lobbying_cost", "ep_meetings"]].dropna()
@@ -67,7 +67,7 @@ with st.form("lobby_prediction_form"):
     with col1:
         lobbying_cost = st.number_input(
             "Lobbying cost (€)",
-            min_value=0.0, step=1000.0, value=10000.0,
+            min_value=0.0, step=5000.0, value=10000.0,
             help="Total annual budget the organization spends on EU lobbying activities, including staff, events, and external consultants.",
         )
         ep_passes = st.number_input(
@@ -172,8 +172,8 @@ if st.session_state.prediction_result is not None:
             log_x=True,
             log_y=True,
             labels={
-                'lobbying_cost': 'Lobbying Cost (€, log scale)',
-                'meetings': 'EP Meetings (log scale)',
+                'lobbying_cost': 'Lobbying Cost (€)',
+                'meetings': 'European Commission Meetings',
             },
             opacity=0.45,
             color_discrete_sequence=['#4a90d9'],
@@ -196,7 +196,9 @@ if st.session_state.prediction_result is not None:
         # Similar orgs list
         st.divider()
         st.subheader("Similar organizations")
+        st.write("Here are some organizations with similar lobbying costs and their actual European Commission meeting counts.")
         st.write("Save any of these to compare on the Organization Comparison page.")
+        st.divider()
 
         try:
             sim_resp = requests.get(f"{API_BASE}/organizations", params={
