@@ -44,9 +44,9 @@ def user_label(u):
     return f"{u['first_name']} {ln}".strip()
 
 
-citizens    = fetch_users("pol_strat_advisor")
-researchers = fetch_users("usaid_worker")
-journalists = fetch_users("administrator")
+citizens    = fetch_users("citizen")
+researchers = fetch_users("researcher")
+journalists = fetch_users("journalist")
 
 citizen_options    = sorted(citizens,    key=lambda u: u.get("last_name") or "")
 researcher_options = sorted(researchers, key=lambda u: u.get("last_name") or "")
@@ -93,7 +93,7 @@ with c1:
                                         key="citizen_select", label_visibility="collapsed")
         if st.button("Login as Citizen", key="citizen_login", type="primary", use_container_width=True):
             st.session_state['authenticated'] = True
-            st.session_state['role'] = 'pol_strat_advisor'
+            st.session_state['role'] = 'citizen'
             st.session_state['user_id'] = selected_citizen['user_id']
             st.session_state['first_name'] = selected_citizen['first_name']
             st.session_state['last_name'] = selected_citizen.get('last_name', '')
@@ -110,7 +110,7 @@ with c2:
                                            key="researcher_select", label_visibility="collapsed")
         if st.button("Login as Researcher", key="researcher_login", type="primary", use_container_width=True):
             st.session_state['authenticated'] = True
-            st.session_state['role'] = 'usaid_worker'
+            st.session_state['role'] = 'researcher'
             st.session_state['user_id'] = selected_researcher['user_id']
             st.session_state['first_name'] = selected_researcher['first_name']
             st.session_state['last_name'] = selected_researcher.get('last_name', '')
@@ -127,7 +127,7 @@ with c3:
                                            key="journalist_select", label_visibility="collapsed")
         if st.button("Login as Journalist", key="journalist_login", type="primary", use_container_width=True):
             st.session_state['authenticated'] = True
-            st.session_state['role'] = 'administrator'
+            st.session_state['role'] = 'journalist'
             st.session_state['user_id'] = selected_journalist['user_id']
             st.session_state['first_name'] = selected_journalist['first_name']
             st.session_state['last_name'] = selected_journalist.get('last_name', '')
