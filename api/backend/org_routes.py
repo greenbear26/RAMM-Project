@@ -22,38 +22,36 @@ def get_all_organizations():
         max_cost    = request.args.get("max_cost")
         name        = request.args.get("name")
         limit       = int(request.args.get("limit", 50))
-
-        query = """
-            SELECT DISTINCT o.org_id, o.name, o.members_eu, o.members_fte,
-                   o.lobbying_cost, o.interest_represented, o.country_code,
-                   o.industry_id, o.lobbyfacts_url
-            FROM organization o
-            LEFT JOIN lobbying_activity la ON o.org_id = la.org_id
-            LEFT JOIN policy_area pa ON la.policy_area_id = pa.policy_area_id
+ 
+        query  = """
+            SELECT DISTINCT org_id, name, members_fte,
+                   lobbying_cost, interest_represented, country_name,
+                   all_ep_passes, ep_meetings, policy_areas
+            FROM lobbying_organization
             WHERE 1=1
         """
         params = []
 
         if country:
-            query += " AND o.country_code = %s"
+            query += " AND country_name = %s"
             params.append(country)
-        if interest:
-            query += " AND o.interest_represented LIKE %s"
-            params.append(f"%{interest}%")
         if policy_area:
-            query += " AND pa.name = %s"
-            params.append(policy_area)
+            query += " AND policy_areas LIKE %s"
+            params.append(f"%{policy_area}%")
+        if interest:
+            query += " AND interest_represented LIKE %s"
+            params.append(f"%{interest}%")
         if min_cost:
-            query += " AND o.lobbying_cost >= %s"
+            query += " AND lobbying_cost >= %s"
             params.append(float(min_cost))
         if max_cost:
-            query += " AND o.lobbying_cost <= %s"
+            query += " AND lobbying_cost <= %s"
             params.append(float(max_cost))
         if name:
-            query += " AND o.name LIKE %s"
+            query += " AND name LIKE %s"
             params.append(f"%{name}%")
-
-        query += " ORDER BY o.lobbying_cost DESC LIMIT %s"
+ 
+        query += " ORDER BY lobbying_cost DESC LIMIT %s"
         params.append(limit)
 
         with get_db().cursor(dictionary=True) as cursor:
@@ -129,9 +127,10 @@ def get_organization(org_id):
     try:
         with get_db().cursor(dictionary=True) as cursor:
             cursor.execute(
-                """SELECT org_id, name, members_eu, members_fte, lobbying_cost,
-                          interest_represented, country_code, industry_id, lobbyfacts_url
-                   FROM organization WHERE org_id = %s""",
+                """SELECT org_id, name, members_fte,
+                   lobbying_cost, interest_represented, country_name,
+                   all_ep_passes, ep_meetings, policy_areas
+                   FROM lobbying_organization WHERE org_id = %s""",
                 (org_id,)
             )
             org = cursor.fetchone()
@@ -423,27 +422,28 @@ def create_organization():
     current_app.logger.info("POST /organizations")
     try:
         data = request.get_json()
-
-        required_fields = ["name", "country_code", "lobbying_cost"]
+ 
+        required_fields = ["name", "country_name", "lobbying_cost"]
         for field in required_fields:
             if field not in data:
                 return error_response(f"Missing required field: {field}", 400)
-
+ 
+        query = """
+            INSERT INTO lobbying_organization
+                (name, all_ep_passes, members_fte, lobbying_cost,
+                 interest_represented, country_name, ep_meetings, policy_areas)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        """
         with get_db().cursor(dictionary=True) as cursor:
-            cursor.execute("""
-                INSERT INTO organization
-                    (name, members_eu, members_fte, lobbying_cost,
-                     interest_represented, country_code, industry_id, lobbyfacts_url)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-            """, (
+            cursor.execute(query, (
                 data["name"],
-                data.get("members_eu"),
+                data.get("all_ep_passes"),
                 data.get("members_fte"),
                 data["lobbying_cost"],
                 data.get("interest_represented"),
-                data["country_code"],
-                data.get("industry_id"),
-                data.get("lobbyfacts_url"),
+                data["country_name"],
+                data.get("ep_meetings"),
+                data.get("policy_areas"),
             ))
             new_id = cursor.lastrowid
 
@@ -463,8 +463,8 @@ def update_organization(org_id):
         data = request.get_json()
 
         allowed_fields = [
-            "name", "members_eu", "members_fte", "lobbying_cost",
-            "interest_represented", "country_code", "industry_id", "lobbyfacts_url"
+            "name", "all_ep_passes", "members_fte", "lobbying_cost",
+            "interest_represented", "country_name", "ep_meetings", "policy_areas"
         ]
         update_fields = [f"{f} = %s" for f in allowed_fields if f in data]
         params        = [data[f] for f in allowed_fields if f in data]
@@ -473,13 +473,13 @@ def update_organization(org_id):
             return error_response("No valid fields to update", 400)
 
         with get_db().cursor(dictionary=True) as cursor:
-            cursor.execute("SELECT org_id FROM organization WHERE org_id = %s", (org_id,))
+            cursor.execute("SELECT org_id FROM lobbying_organization WHERE org_id = %s", (org_id,))
             if not cursor.fetchone():
                 return error_response("Organization not found", 404)
 
             params.append(org_id)
             cursor.execute(
-                f"UPDATE organization SET {', '.join(update_fields)} WHERE org_id = %s",
+                f"UPDATE lobbying_organization SET {', '.join(update_fields)} WHERE org_id = %s",
                 params
             )
 
@@ -496,11 +496,11 @@ def delete_organization(org_id):
     current_app.logger.info(f"DELETE /organizations/{org_id}")
     try:
         with get_db().cursor(dictionary=True) as cursor:
-            cursor.execute("SELECT org_id FROM organization WHERE org_id = %s", (org_id,))
+            cursor.execute("SELECT org_id FROM lobbying_organization WHERE org_id = %s", (org_id,))
             if not cursor.fetchone():
                 return error_response("Organization not found", 404)
-            cursor.execute("DELETE FROM organization WHERE org_id = %s", (org_id,))
-
+            cursor.execute("DELETE FROM lobbying_organization WHERE org_id = %s", (org_id,))
+ 
         get_db().commit()
         current_app.logger.info(f"Deleted organization id={org_id}")
         return jsonify({"message": "Organization deleted successfully"}), 200
@@ -516,59 +516,10 @@ def get_policy_areas():
     try:
         with get_db().cursor(dictionary=True) as cursor:
             cursor.execute(
-                "SELECT policy_area_id, name, description FROM policy_area ORDER BY name"
+                "SELECT policy_areas FROM lobbying_organization"
             )
             areas = cursor.fetchall()
         return jsonify(areas), 200
     except Error as e:
         current_app.logger.error(f"Database error in get_policy_areas: {e}")
-        return error_response(str(e))
-
-
-# Route 17 — GET /analytics/policy-area-stats
-@organizations_bp.route("/analytics/policy-area-stats", methods=["GET"])
-def get_policy_area_stats():
-    current_app.logger.info("GET /analytics/policy-area-stats")
-    try:
-        with get_db().cursor(dictionary=True) as cursor:
-            cursor.execute("""
-                SELECT pa.name AS policy_area,
-                       COUNT(DISTINCT la.org_id)   AS org_count,
-                       COUNT(la.activity_id)        AS activity_count,
-                       COALESCE(AVG(o.lobbying_cost), 0) AS avg_lobbying_cost
-                FROM policy_area pa
-                LEFT JOIN lobbying_activity la ON pa.policy_area_id = la.policy_area_id
-                LEFT JOIN organization o       ON la.org_id = o.org_id
-                GROUP BY pa.policy_area_id, pa.name
-                ORDER BY org_count DESC
-            """)
-            stats = cursor.fetchall()
-        return jsonify(stats), 200
-    except Error as e:
-        current_app.logger.error(f"Database error in get_policy_area_stats: {e}")
-        return error_response(str(e))
-
-
-# Route 18 — GET /analytics/country-stats
-@organizations_bp.route("/analytics/country-stats", methods=["GET"])
-def get_country_stats():
-    current_app.logger.info("GET /analytics/country-stats")
-    try:
-        with get_db().cursor(dictionary=True) as cursor:
-            cursor.execute("""
-                SELECT
-                    o.country_code,
-                    COUNT(*)                          AS org_count,
-                    COALESCE(SUM(o.lobbying_cost), 0) AS total_spend,
-                    COALESCE(AVG(o.lobbying_cost), 0) AS avg_spend,
-                    COALESCE(MAX(o.lobbying_cost), 0) AS max_spend
-                FROM organization o
-                WHERE o.country_code IS NOT NULL
-                GROUP BY o.country_code
-                ORDER BY total_spend DESC
-            """)
-            stats = cursor.fetchall()
-        return jsonify(stats), 200
-    except Error as e:
-        current_app.logger.error(f"Database error in get_country_stats: {e}")
         return error_response(str(e))

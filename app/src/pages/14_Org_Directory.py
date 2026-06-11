@@ -97,7 +97,6 @@ with main_col:
             org2 = st.session_state.compare_pair[1]
 
             # ── Fetch all data up front so we can build cross-org charts ──────
-            pair_data = []
             for org in [org1, org2]:
                 org_id = org.get("org_id")
                 details, ml = org.copy(), {}
@@ -108,13 +107,6 @@ with main_col:
                             details = r.json()
                     except Exception:
                         pass
-                    try:
-                        ml_r = requests.get(f"http://web-api:4000/organizations/{org_id}/influence-prediction")
-                        if ml_r.status_code == 200:
-                            ml = ml_r.json()
-                    except Exception:
-                        pass
-                pair_data.append({"org": org, "details": details, "ml": ml, "org_id": org_id})
 
             d1, d2 = pair_data[0], pair_data[1]
             name1 = d1["details"].get("name", org1["name"])
@@ -149,48 +141,10 @@ with main_col:
 
             st.divider()
 
-            # Chart 2: ML Score gauges 
-            st.markdown("### ML Influence Score")
-            g1, g2 = st.columns(2)
-
-            for gcol, d, name in [(g1, d1, name1), (g2, d2, name2)]:
-                score = d["ml"].get("influence_score") or 0
-                cls   = d["ml"].get("influence_class", "—")
-                fig_gauge = go.Figure(go.Indicator(
-                    mode="gauge+number",
-                    value=score,
-                    title={"text": name[:30], "font": {"size": 13}},
-                    gauge={
-                        "axis": {"range": [0, 100]},
-                        "bar": {"color": "#2563EB"},
-                        "steps": [
-                            {"range": [0, 5],   "color": "#D1FAE5"},
-                            {"range": [5, 20],  "color": "#FEF3C7"},
-                            {"range": [20, 100],"color": "#FEE2E2"},
-                        ],
-                        "threshold": {
-                            "line": {"color": "red", "width": 3},
-                            "thickness": 0.75,
-                            "value": score,
-                        },
-                    },
-                ))
-                fig_gauge.update_layout(
-                    height=240,
-                    margin=dict(t=40, b=10, l=20, r=20),
-                    paper_bgcolor="rgba(0,0,0,0)",
-                )
-                with gcol:
-                    st.plotly_chart(fig_gauge, use_container_width=True)
-                    st.caption(f"Influence class: **{cls}**")
-
-            st.divider()
-
             # Chart 3: Policy area overlap 
             st.markdown("### Policy Area Overlap")
 
-            areas1 = {a.get("policy_area") for a in d1["details"].get("lobbying_activities", []) if a.get("policy_area")}
-            areas2 = {a.get("policy_area") for a in d2["details"].get("lobbying_activities", []) if a.get("policy_area")}
+            
             shared    = sorted(areas1 & areas2)
             only1     = sorted(areas1 - areas2)
             only2     = sorted(areas2 - areas1)

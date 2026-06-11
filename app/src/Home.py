@@ -76,25 +76,21 @@ CARD_STYLE = """
 background: #1E293B;
 border: 1px solid #334155;
 border-radius: 14px;
-padding: 28px 24px 20px 24px;
+padding: 20px 20px 20px 20px;
 margin-bottom: 12px;
-height: 200px;
+height: 155px;
 overflow: hidden;
-display: flex;
-flex-direction: column;
-justify-content: space-between;
 """
 
 # Citizen card
 with c1:
     st.markdown(f"""
     <div style="{CARD_STYLE}">
-        <div>
-            <h3 style="color:#FFFFFF; margin:0 0 8px 0; font-size:18px;">European Citizen</h3>
-            <p style="color:#94A3B8; font-size:13px; line-height:1.6; margin:0 0 16px 0;">
-                See who is lobbying in your country and what policies they are trying to influence.
-            </p>
-        </div>
+        <h3 style="color:#FFFFFF; margin:0 0 8px 0; font-size:18px;">European Citizen</h3>
+        <p style="color:#94A3B8; font-size:13px; line-height:1.6; margin:0;">
+            Explore which organizations are shaping EU policy in your country.
+            Understand who funds political lobbying and which policy areas are most contested.
+        </p>
     </div>
     """, unsafe_allow_html=True)
     selected_citizen = st.selectbox("Select citizen", citizen_options,
@@ -111,12 +107,11 @@ with c1:
 with c2:
     st.markdown(f"""
     <div style="{CARD_STYLE}">
-        <div>
-            <h3 style="color:#FFFFFF; margin:0 0 8px 0; font-size:18px;">Political Science Researcher</h3>
-            <p style="color:#94A3B8; font-size:13px; line-height:1.6; margin:0 0 16px 0;">
-                Compare lobbying organizations, run ML predictions, and explore spending patterns across EU policy areas.
-            </p>
-        </div>
+        <h3 style="color:#FFFFFF; margin:0 0 8px 0; font-size:18px;">Political Science Researcher</h3>
+        <p style="color:#94A3B8; font-size:13px; line-height:1.6; margin:0;">
+            Compare lobbying organizations side by side, run ML influence predictions,
+            and analyse spending patterns across policy areas and EU institutions.
+        </p>
     </div>
     """, unsafe_allow_html=True)
     selected_researcher = st.selectbox("Select researcher", researcher_options,
@@ -133,12 +128,11 @@ with c2:
 with c3:
     st.markdown(f"""
     <div style="{CARD_STYLE}">
-        <div>
-            <h3 style="color:#FFFFFF; margin:0 0 8px 0; font-size:18px;">Political Party Journalist</h3>
-            <p style="color:#94A3B8; font-size:13px; line-height:1.6; margin:0 0 16px 0;">
-                Explore political party profiles across EU member states and track how populist movements shape EU policy.
-            </p>
-        </div>
+        <h3 style="color:#FFFFFF; margin:0 0 8px 0; font-size:18px;">Political Party Journalist</h3>
+        <p style="color:#94A3B8; font-size:13px; line-height:1.6; margin:0;">
+            Predict parliament seat outcomes, profile political parties across EU member
+            states, and track how populist and far-right movements influence EU policy.
+        </p>
     </div>
     """, unsafe_allow_html=True)
     selected_journalist = st.selectbox("Select journalist", journalist_options,

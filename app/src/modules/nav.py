@@ -78,9 +78,12 @@ def ml_model_mgmt_nav():
 
 def new_ml_model_nav():
     st.sidebar.page_link(
-        "pages/22_Prettier_ML.py", label="New ML Model", icon="📈"
+        "pages/22_Party_Learnings.py", label="Explore Parties", icon="🎉"
     )
-
+def party_lobbyists_nav():
+    st.sidebar.page_link(
+        "pages/23_Party_Lobbyists.py", label="Party Lobbyists", icon="⚖️"
+    )
 # Sidebar assembly
 
 def SideBarLinks(show_home=False):
@@ -118,7 +121,8 @@ def SideBarLinks(show_home=False):
         if st.session_state["role"] == "administrator":
             journalist_home_nav()
             ml_model_mgmt_nav()
-            # new_ml_model_nav()
+            new_ml_model_nav()
+            party_lobbyists_nav()
             
     # About link appears at the bottom for all roles
     about_page_nav()
