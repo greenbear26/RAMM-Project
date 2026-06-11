@@ -4,10 +4,9 @@ logger = logging.getLogger(__name__)
 import html
 import re
 import random
+import requests
 import streamlit as st
 import streamlit.components.v1 as components
-import pandas as pd
-from pathlib import Path
 from modules.nav import SideBarLinks
 
 st.set_page_config(layout='wide')
@@ -16,46 +15,48 @@ SideBarLinks()
 
 st.sidebar.header("Citizen Home")
 
+API_BASE = "http://web-api:4000"
+
 if "saved_facts" not in st.session_state:
     st.session_state.saved_facts = []
 
-DATA_PATH = Path("/appcode/datasets/lobbying/lobbyfacts_cleaned.csv")
 
-@st.cache_data
-def load_data():
-    df = pd.read_csv(DATA_PATH)
-    df = df.dropna(subset=["Name", "Lobbying cost", "Head office"])
-    return df
+def fetch_random_orgs(n=10):
+    try:
+        resp = requests.get(f"{API_BASE}/organizations/random", params={"n": n}, timeout=5)
+        if resp.status_code == 200:
+            return resp.json()
+    except Exception:
+        pass
+    return []
 
-df = load_data()
 
-def generate_facts(df, n=10):
-    sample = df.sample(n=n)
+def generate_facts(n=10):
+    orgs = fetch_random_orgs(n)
     facts = []
-    for _, row in sample.iterrows():
-        name     = row["Name"]
-        cost     = row["Lobbying cost"]
-        country  = row["Head office"]
-        meetings = row["Meetings"]
-        passes   = row["all EP passes"]
+    for org in orgs:
+        name     = org.get("name", "Unknown")
+        cost     = org.get("lobbying_cost") or 0
+        country  = org.get("country_name", "Unknown")
+        meetings = org.get("ep_meetings")
+        passes   = org.get("all_ep_passes")
 
-        if cost >= 1_000_000:
-            cost_str = f"€{cost/1_000_000:.1f}M"
-        else:
-            cost_str = f"€{cost:,.0f}"
+        cost_str = f"€{cost/1_000_000:.1f}M" if cost >= 1_000_000 else f"€{cost:,.0f}"
+        meetings_str = str(int(meetings)) if meetings is not None else "unknown"
+        passes_str   = str(int(passes))   if passes   is not None else "unknown"
 
         templates = [
-            f"**{name}** ({country}) spent **{cost_str}** lobbying the EU and held **{int(meetings) if pd.notna(meetings) else 'unknown'}** meetings with EU officials.",
-            f"**{name}**, headquartered in {country}, has **{int(passes) if pd.notna(passes) else 'unknown'}** EP access passes and spends **{cost_str}** per year on lobbying.",
+            f"**{name}** ({country}) spent **{cost_str}** lobbying the EU and held **{meetings_str}** meetings with EU officials.",
+            f"**{name}**, headquartered in {country}, has **{passes_str}** EP access passes and spends **{cost_str}** per year on lobbying.",
             f"Did you know? **{name}** from {country} is one of the organizations actively lobbying the EU, spending **{cost_str}** annually.",
-            f"**{name}** ({country}) logged **{int(meetings) if pd.notna(meetings) else 'unknown'}** meetings with EU institutions and holds **{int(passes) if pd.notna(passes) else 'unknown'}** EP access passes.",
+            f"**{name}** ({country}) logged **{meetings_str}** meetings with EU institutions and holds **{passes_str}** EP access passes.",
         ]
         facts.append(random.choice(templates))
     return facts
 
 
 if "facts" not in st.session_state:
-    st.session_state.facts = generate_facts(df, n=10)
+    st.session_state.facts = generate_facts(n=10)
 
 facts = st.session_state.facts
 
@@ -101,7 +102,7 @@ to pin it to your saved list, then use **Copy** to paste it anywhere you like.
         st.markdown("### Did you know? — EU Lobbying Facts")
     with fact_btn:
         if st.button("Refresh Facts", use_container_width=True):
-            st.session_state.facts = generate_facts(df, n=10)
+            st.session_state.facts = generate_facts(n=10)
             st.rerun()
     st.caption("Facts are pulled from real EU lobbying data. Refresh for a new set.")
 
