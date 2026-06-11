@@ -10,7 +10,6 @@ st.set_page_config(layout='wide')
 SideBarLinks()
 
 st.markdown("# What Are EU Parties Fighting For?")
-st.sidebar.header("Journalist View")
 st.write("Pick a country and EP party to see which parties are active and what they stand for.")
 
 API_BASE = "http://web-api:4000"
@@ -56,9 +55,6 @@ st.session_state.selected_ep_parties = selected_ep_parties
 
 st.markdown("---")
 
-st.sidebar.markdown("### Your Selections")
-st.sidebar.markdown("**Countries:** " + (", ".join(selected_countries) or "None"))
-st.sidebar.markdown("**EP Parties:** " + (", ".join(selected_ep_parties) or "None"))
 
 
 def fetch_parties(countries, ep_parties):

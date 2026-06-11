@@ -20,16 +20,33 @@ country_options = [
 with st.form("party_prediction_form"):
     col1, col2 = st.columns(2)
     with col1:
-        populist = st.select_slider("Party Populist",
-                                    ["Not Populist", "Borderline Populist", "Populist"])
-        left_right = st.select_slider("Party Left/Right",
-                                      ["Left", "Borderline Left", "Neutral", "Borderline Right", "Right"],
-                                      value="Neutral")
-        eurosceptic = st.select_slider("Party Eurosceptic",
-                                       ["Not Eurosceptic", "Borderline Eurosceptic", "Eurosceptic"])
+        populist = st.select_slider(
+            "Party Populist",
+            ["Not Populist", "Borderline Populist", "Populist"],
+            help="Populist parties frame politics as a struggle between 'the people' and a corrupt elite. They often reject mainstream consensus and appeal directly to voter grievances.",
+        )
+        left_right = st.select_slider(
+            "Party Left/Right",
+            ["Left", "Borderline Left", "Neutral", "Borderline Right", "Right"],
+            value="Neutral",
+            help="The party's position on the traditional economic and social spectrum. Left parties favour redistribution and social equality; right parties favour free markets and traditional values.",
+        )
+        eurosceptic = st.select_slider(
+            "Party Eurosceptic",
+            ["Not Eurosceptic", "Borderline Eurosceptic", "Eurosceptic"],
+            help="How critical the party is of European integration. Hard Eurosceptics want to leave or fundamentally reshape the EU; soft Eurosceptics oppose specific policies while accepting membership.",
+        )
     with col2:
-        country = st.selectbox("Country", country_options)
-        eu_anti_pro = st.slider("Anti or Pro EU", min_value=0.0, max_value=10.0, step=0.1, value=5.0)
+        country = st.selectbox(
+            "Country",
+            country_options,
+            help="The EU member state the party operates in. Electoral systems, voter demographics, and national political culture all influence a party's chance of winning seats.",
+        )
+        eu_anti_pro = st.slider(
+            "Anti / Pro EU stance",
+            min_value=0.0, max_value=10.0, step=0.1, value=5.0,
+            help="A continuous score from 0 (strongly anti-EU) to 10 (strongly pro-EU). This captures nuance beyond the binary Eurosceptic flag — a party can oppose specific EU policies while still supporting membership.",
+        )
     submitted = st.form_submit_button("Predict")
 
 if submitted:

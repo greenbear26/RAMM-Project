@@ -12,7 +12,6 @@ st.set_page_config(layout='wide')
 SideBarLinks()
 
 st.markdown("# Which Lobbyists Are Influencing EU Party Groups?")
-st.sidebar.header("Journalist View")
 st.write("Select an EP party group to see which lobbyists have interacted with them the most.")
 
 API_BASE = "http://web-api:4000"
