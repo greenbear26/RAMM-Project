@@ -5,7 +5,6 @@ import logging
 
 from backend.db_connection import init_app as init_db
 
-from backend.ngos.ngo_routes import ngo_bp
 from backend.org_routes import organizations_bp
 from backend.country_routes import countries_bp
 from backend.users_routes import users_bp
@@ -41,8 +40,6 @@ def create_app():
     # Register the routes from each Blueprint with the app object
     # and give a url prefix to each.
     app.logger.info("create_app(): registering blueprints")
-    # app.register_blueprint(simple_routes)
-    app.register_blueprint(ngo_bp, url_prefix="/ngo")
     app.register_blueprint(organizations_bp)
     app.register_blueprint(countries_bp)
     app.register_blueprint(users_bp)
