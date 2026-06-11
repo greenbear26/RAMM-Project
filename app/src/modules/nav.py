@@ -40,6 +40,10 @@ def usaid_worker_home_nav():
         "pages/10_Polysci_Home.py", label="Researcher Home", icon="🏠"
     )
 
+def prediction_nav():
+    st.sidebar.page_link(
+        "pages/11_Prediction.py", label="ML Influence Prediction", icon="🤖"
+    )
 
 def ngo_directory_nav():
     st.sidebar.page_link("pages/14_Org_Directory.py", label="Organization Comparison", icon="📊")
@@ -47,22 +51,6 @@ def ngo_directory_nav():
 
 def add_ngo_nav():
     st.sidebar.page_link("pages/15_Add_Org.py", label="Add New Organization", icon="➕")
-
-
-def prediction_nav():
-    st.sidebar.page_link(
-        "pages/11_Prediction.py", label="Meeting Prediction", icon="📈"
-    )
-
-
-def api_test_nav():
-    st.sidebar.page_link("pages/12_API_Test.py", label="Test the API", icon="🛜")
-
-
-def classification_nav():
-    st.sidebar.page_link(
-        "pages/13_Classification.py", label="Classification Demo", icon="🌺"
-    )
 
 
 # Role: Political Journalist
@@ -73,12 +61,12 @@ def journalist_home_nav():
 
 def ml_model_mgmt_nav():
     st.sidebar.page_link(
-        "pages/21_Party_Prediction.py", label="Party Parliament Prediction", icon="🏢"
+        "pages/21_Party_Learnings.py", label="Party Parliament Prediction", icon="🏢"
     )
 
 def new_ml_model_nav():
     st.sidebar.page_link(
-        "pages/22_Party_Learnings.py", label="Explore Parties", icon="🎉"
+        "pages/22_Party_Prediction.py", label="Explore Parties", icon="🎉"
     )
 def party_lobbyists_nav():
     st.sidebar.page_link(

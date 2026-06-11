@@ -31,31 +31,39 @@ def load_users(filepath):
     df = pd.read_csv(filepath)
     return [f"{row['first_name']} {row['last_name']}" for _, row in df.iterrows()]
 
-citizen_options    = sorted(load_users(os.path.join(BASE_DIR, 'Mock_data', 'Citizen_DATA.csv')))
-researcher_options = sorted(load_users(os.path.join(BASE_DIR, 'Mock_data', 'PolySci_DATA.csv')))
-journalist_options = sorted(load_users(os.path.join(BASE_DIR, 'Mock_data', 'Journalist_DATA.csv')))
-
-# Header
+citizen_options    = sorted(load_users(os.path.join(BASE_DIR, 'Mock_data', 'Citizen_DATA.csv')),    key=lambda name: name.split()[-1])
+researcher_options = sorted(load_users(os.path.join(BASE_DIR, 'Mock_data', 'PolySci_DATA.csv')),    key=lambda name: name.split()[-1])
+journalist_options = sorted(load_users(os.path.join(BASE_DIR, 'Mock_data', 'Journalist_DATA.csv')), key=lambda name: name.split()[-1])
+# Hero section
 st.markdown("""
-<div style="text-align: center; padding: 32px 0 20px 0;">
-    <h1 style="color: #1A1A2E; font-size: 42px; font-weight: 800; margin: 0 0 6px 0;
+<div style="
+    background: linear-gradient(135deg, #0F172A 0%, #1E3A5F 60%, #1a4a7a 100%);
+    border-radius: 14px;
+    padding: 32px 40px;
+    margin-bottom: 28px;
+    text-align: center;
+">
+    <h1 style="color: #FFFFFF; font-size: 38px; font-weight: 800; margin: 0 0 8px 0;
                letter-spacing: -1px;">LobbyLens</h1>
-    <p style="color: #4A6FA5; font-size: 15px; margin: 0 0 6px 0; font-weight: 600;">
+    <p style="color: #93C5FD; font-size: 16px; margin: 0 0 10px 0; font-weight: 500;">
         Transparency into EU Lobbying &amp; Political Influence
     </p>
-    <p style="color: #64748B; font-size: 13px; margin: 0 auto; max-width: 480px;">
-        Track lobbying spend, compare organizational influence, and uncover the forces behind EU decision-making.
+    <p style="color: #CBD5E1; font-size: 13px; max-width: 540px; margin: 0 auto; line-height: 1.6;">
+        Explore how organizations shape European Union policy. Track lobbying spend,
+        compare organizational influence, and uncover the forces behind EU decision-making.
     </p>
 </div>
 """, unsafe_allow_html=True)
 
 st.markdown("""
-<p style="text-align:center; color:#94A3B8; font-size:11px; letter-spacing:2px;
-   text-transform:uppercase; font-weight:600; margin-bottom:14px;">
+<p style="text-align:center; color:#64748B; font-size:12px; letter-spacing:2px;
+   text-transform:uppercase; font-weight:600; margin-bottom:16px;">
    Select your role to continue
 </p>
 """, unsafe_allow_html=True)
 
+
+# Card style
 CARD_STYLE = """
 background: #1E293B;
 border: 1px solid #334155;
@@ -63,8 +71,14 @@ border-radius: 10px;
 padding: 14px 16px;
 margin-bottom: 10px;
 height: 150px;
+border-radius: 12px;
+padding: 18px 18px 14px 18px;
+margin-bottom: 10px;
+height: 160px;
 overflow: hidden;
 """
+
+c1, c2, c3 = st.columns(3)
 
 c1, c2, c3 = st.columns(3)
 
@@ -102,6 +116,7 @@ with c3:
         st.switch_page('pages/20_Journalist_Home.py')
 
 st.markdown("""
+<div style="margin-top: 32px; text-align: center; color: #94A3B8; font-size: 11px;">
 <div style="margin-top: 32px; text-align: center; color: #94A3B8; font-size: 11px;">
     LobbyLens &nbsp;·&nbsp; EU Lobbying Transparency Platform &nbsp;·&nbsp;
     Data sourced from the EU Transparency Register &amp; LobbyFacts
