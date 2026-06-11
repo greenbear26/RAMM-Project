@@ -12,7 +12,7 @@ st.set_page_config(layout='wide')
 SideBarLinks()
 
 st.markdown("# Which Lobbyists Are Influencing EU Party Groups?")
-st.write("Select an EP party group to see which lobbyists have interacted with them the most.")
+st.write("Select an European Parliament party to see which lobbyists have interacted with them the most.")
 
 API_BASE = "http://web-api:4000"
 
@@ -72,7 +72,7 @@ if st.button("Search", type="primary", use_container_width=True):
 
                     st.markdown("---")
                     with st.expander("View full table"):
-                        st.dataframe(df, use_container_width=True)
+                        st.dataframe(df, use_container_width=True, hide_index=True)
 
                     st.download_button(
                         label="⬇ Download as CSV",

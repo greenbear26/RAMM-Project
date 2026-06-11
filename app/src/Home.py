@@ -86,7 +86,7 @@ overflow: hidden;
 c1, c2, c3 = st.columns(3)
 
 with c1:
-    st.markdown(f'<div style="{CARD_STYLE}"><h3 style="color:#FFFFFF; margin:0 0 4px 0; font-size:15px; font-weight:700;">European Citizen</h3><p style="color:#94A3B8; font-size:11px; line-height:1.5; margin:0;">Explore who funds EU lobbying and which policy areas are most contested.</p></div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="{CARD_STYLE}"><h3 style="color:#FFFFFF; margin:0 0 4px 0; font-size:15px; font-weight:700;">European Citizen</h3><p style="color:#94A3B8; font-size:11px; line-height:1.5; margin:0;">Explore EU lobbying organizations and their different attributes.</p></div>', unsafe_allow_html=True)
     if citizen_options:
         selected_citizen = st.selectbox("Select citizen", citizen_options,
                                         format_func=user_label,
@@ -103,7 +103,7 @@ with c1:
         st.info("Could not load users — backend may be starting up.")
 
 with c2:
-    st.markdown(f'<div style="{CARD_STYLE}"><h3 style="color:#FFFFFF; margin:0 0 4px 0; font-size:15px; font-weight:700;">Political Science Researcher</h3><p style="color:#94A3B8; font-size:11px; line-height:1.5; margin:0;">Compare lobbying organizations, run ML predictions, and analyse spending patterns.</p></div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="{CARD_STYLE}"><h3 style="color:#FFFFFF; margin:0 0 4px 0; font-size:15px; font-weight:700;">Political Science Researcher</h3><p style="color:#94A3B8; font-size:11px; line-height:1.5; margin:0;">Compare lobbying organizations and analyze their influence on the EU.</p></div>', unsafe_allow_html=True)
     if researcher_options:
         selected_researcher = st.selectbox("Select researcher", researcher_options,
                                            format_func=user_label,
@@ -120,7 +120,7 @@ with c2:
         st.info("Could not load users — backend may be starting up.")
 
 with c3:
-    st.markdown(f'<div style="{CARD_STYLE}"><h3 style="color:#FFFFFF; margin:0 0 4px 0; font-size:15px; font-weight:700;">Political Party Journalist</h3><p style="color:#94A3B8; font-size:11px; line-height:1.5; margin:0;">Profile EU parties, predict parliament outcomes, and track populist movements.</p></div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="{CARD_STYLE}"><h3 style="color:#FFFFFF; margin:0 0 4px 0; font-size:15px; font-weight:700;">Political Party Journalist</h3><p style="color:#94A3B8; font-size:11px; line-height:1.5; margin:0;">Track European political parties, their influence on national parliaments, and their interactions with lobbying organizations.</p></div>', unsafe_allow_html=True)
     if journalist_options:
         selected_journalist = st.selectbox("Select journalist", journalist_options,
                                            format_func=user_label,

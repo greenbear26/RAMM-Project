@@ -67,12 +67,12 @@ with st.form("lobby_prediction_form"):
             help="Total annual budget the organization spends on EU lobbying activities, including staff, events, and external consultants.",
         )
         ep_passes = st.number_input(
-            "EP passes",
+            "European Parliament passes",
             min_value=0.0, step=1.0, value=10.0,
             help="European Parliament access passes held by the organization. These badges allow staff to enter EP buildings and directly engage with MEPs and their offices.",
         )
         members_fte = st.number_input(
-            "Members / FTE",
+            "Full time employees",
             min_value=0.0, step=1.0, value=25.0,
             help="Full-time equivalent (FTE) staff or members dedicated to lobbying. For trade associations this is the number of member organizations; for companies it is the number of in-house lobbyists.",
         )
@@ -145,13 +145,13 @@ if st.session_state.prediction_result is not None:
                
     c1, c2, c3 = st.columns(3)
     with c1:
-        st.metric("Predicted EP Meetings", f"{prediction:.1f}")
+        st.metric("Predicted European Commission Meetings", f"{prediction:.1f}")
     with c2:
         st.metric("Lobbying Cost", f"€{inputs['lobbying_cost']:,.0f}")
     with c3:
-        st.metric("EP Passes", f"{int(inputs['ep_passes'])}")
+        st.metric("European Parliament Passes", f"{int(inputs['ep_passes'])}")
 
-    st.caption(f"Interest: {inputs['interest']}  ·  Country: {inputs['country']}  ·  Members FTE: {inputs['members_fte']}")
+    st.markdown(f"**Interest**: {inputs['interest']}  ·  **Country**: {inputs['country']}  ·  **Full time employees**: {inputs['members_fte']}")
 
     # Scatter plot
     st.divider()

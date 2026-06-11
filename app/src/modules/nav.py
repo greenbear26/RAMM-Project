@@ -59,12 +59,12 @@ def journalist_home_nav():
 
 def party_parliament_prediction_nav():
     st.sidebar.page_link(
-        "pages/21_Party_Learnings.py", label="Party Parliament Prediction", icon="🏢"
+        "pages/22_Party_Prediction.py", label="Party Parliament Prediction", icon="🏢"
     )
 
 def party_explore_nav():
     st.sidebar.page_link(
-        "pages/22_Party_Prediction.py", label="Explore Parties", icon="🎉"
+        "pages/21_Party_Learnings.py", label="Explore Parties", icon="🎉"
     )
 
 def party_lobbyists_nav():
@@ -105,8 +105,8 @@ def SideBarLinks(show_home=True):
 
         if st.session_state["role"] == "journalist":
             journalist_home_nav()
-            party_parliament_prediction_nav()
             party_explore_nav()
+            party_parliament_prediction_nav()
             party_lobbyists_nav()
             
     # About link appears at the bottom for all roles
