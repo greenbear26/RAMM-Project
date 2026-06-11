@@ -133,7 +133,7 @@ if st.button("Search", type="primary", use_container_width=True):
                         df_country = df_all[df_all["Country"] == country].drop(columns=["Country"])
                         st.dataframe(df_country, use_container_width=True, hide_index=True)
             else:
-                st.dataframe(table, use_container_width=True)
+                st.dataframe(table, use_container_width=True, hide_index=True)
 
             st.download_button(
                 label="⬇ Download parties as CSV",
