@@ -13,7 +13,13 @@ SideBarLinks()
 
 st.markdown("# Organization Comparison")
 st.sidebar.header("Researcher Home")
-st.write("Save organizations from the Add Organization page or the Meeting Prediction page, then select two here to compare.")
+
+st.markdown("""
+Select two saved organizations to compare them side by side. View lobbying spend, EP meeting
+counts, and ML-predicted influence scores in charts, then drill into policy area overlap and
+lobbying efficiency to understand how each organization stacks up.
+Save organizations first from the **Add Organization** page.
+""")
 
 if "saved_orgs" not in st.session_state:
     st.session_state.saved_orgs = []

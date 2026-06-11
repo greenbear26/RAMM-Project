@@ -11,7 +11,12 @@ SideBarLinks()
 
 st.markdown("# Add Organization")
 st.sidebar.header("Researcher Home")
-st.write("Search and save organizations to compare on the Organization Comparison page.")
+
+st.markdown("""
+Filter lobbying organizations by **policy area** and **country**, then hit **Search** to browse
+results ranked by lobbying spend. Hit **Save** on any organization to add it to your saved list,
+then head to the **Organization Comparison** page to compare two organizations head to head.
+""")
 
 if "saved_orgs" not in st.session_state:
     st.session_state.saved_orgs = []

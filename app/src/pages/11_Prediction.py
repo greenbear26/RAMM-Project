@@ -15,7 +15,12 @@ from modules.nav import SideBarLinks
 SideBarLinks()
 
 st.markdown("# Meeting Prediction")
-st.write("Enter your organization's details below to predict how many EP meetings it is likely to secure.")
+
+st.markdown("""
+Enter an organization's lobbying spend, number of staff, and EP access passes to get an
+ML-predicted estimate of how many European Parliament meetings it is likely to secure.
+Use the scatter plot to see how the prediction compares against real organizations in the dataset.
+""")
 
 # Load lobbyfacts data for scatter plot
 @st.cache_data

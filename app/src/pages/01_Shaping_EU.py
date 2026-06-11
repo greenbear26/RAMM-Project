@@ -3,14 +3,22 @@ logger = logging.getLogger(__name__)
 
 import streamlit as st
 import requests
+import pandas as pd
 from modules.nav import SideBarLinks
 
 st.set_page_config(layout='wide')
 SideBarLinks()
 
 st.markdown("# Who is Shaping EU Policies?")
-st.sidebar.header("Citizen View")
-st.write("Pick your areas of interest and we'll show you which organizations are lobbying on them.")
+
+st.markdown("""
+This page lets you filter those organizations by **policy area** and **country of origin**
+so you can see exactly who is trying to shape the rules that affect your life.
+
+Select one or more policy areas and countries below, then hit **Search** to surface matching
+organizations ranked by lobbying spend. You can also **download** the results as a CSV
+to explore the data further.
+""")
 
 API_BASE = "http://web-api:4000"
 
@@ -52,9 +60,6 @@ st.session_state.selected_countries = selected_countries
 
 st.markdown("---")
 
-st.sidebar.markdown("### Your Selections")
-st.sidebar.markdown("**Policies:** " + (", ".join(selected_policies) or "None"))
-st.sidebar.markdown("**Countries:** " + (", ".join(selected_countries) or "None"))
 
 
 def fetch_orgs(policies, countries):
@@ -79,17 +84,16 @@ def fetch_orgs(policies, countries):
     return sorted(seen.values(), key=lambda o: o.get("lobbying_cost") or 0, reverse=True)
 
 
+if "org_results_table" not in st.session_state:
+    st.session_state.org_results_table = []
+
 if st.button("Search", type="primary", use_container_width=True):
     if not selected_policies and not selected_countries:
         st.warning("Please select at least one policy or country.")
     else:
         results = fetch_orgs(selected_policies, selected_countries)
-
-        st.markdown(f"### Results: {len(results)} organizations found")
-
-        if not results:
-            st.info("No organizations found. Try different filters.")
-        else:
+        table = []
+        if results:
             table = [{
                 "Name":                 o.get("name"),
                 "Policy areas":         o.get("policy_areas").strip("[]").replace('"', '') if o.get("policy_areas") else "",
@@ -97,4 +101,19 @@ if st.button("Search", type="primary", use_container_width=True):
                 "Interest represented": o.get("interest_represented"),
                 "Country":              o.get("country_name"),
             } for o in results]
+        st.session_state.org_results_table = table
+        st.markdown(f"### Results: {len(results)} organizations found")
+        if not results:
+            st.info("No organizations found. Try different filters.")
+        else:
             st.dataframe(table, use_container_width=True)
+
+if st.session_state.org_results_table:
+    csv = pd.DataFrame(st.session_state.org_results_table).to_csv(index=False)
+    st.download_button(
+        label="Download Organizations (CSV)",
+        data=csv,
+        file_name="lobbylens_organizations.csv",
+        mime="text/csv",
+        use_container_width=True,
+    )
