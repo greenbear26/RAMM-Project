@@ -23,14 +23,14 @@ def citizen_home_nav():
     )
 
 
-def shaping_eu__nav():
+def shaping_eu_nav():
     st.sidebar.page_link(
         "pages/01_Shaping_EU.py", label="Shaping EU Policies", icon="🇪🇺"
     )
 
 
 def explore_organization_nav():
-    st.sidebar.page_link("pages/02_Explore.py", label="Explore Facts", icon="🔎️")
+    st.sidebar.page_link("pages/02_Explore_Lobbying_Facts.py", label="Explore Facts", icon="🔎️")
 
 
 # Role: Poly-Sci Researcher
@@ -46,10 +46,10 @@ def lobby_prediction_nav():
     )
 
 def search_organization_nav():
-    st.sidebar.page_link("pages/15_Add_Org.py", label="Search Organizations", icon="🔍")
+    st.sidebar.page_link("pages/12_Search_Org.py", label="Search Organizations", icon="🔍")
 
 def compare_organization_nav():
-    st.sidebar.page_link("pages/14_Org_Directory.py", label="Organization Comparison", icon="📊")
+    st.sidebar.page_link("pages/13_Org_Compare.py", label="Organization Comparison", icon="📊")
 
 
 # Role: Political Journalist
@@ -94,7 +94,7 @@ def SideBarLinks(show_home=False):
 
         if st.session_state["role"] == "citizen":
             citizen_home_nav()
-            shaping_eu__nav()
+            shaping_eu_nav()
             explore_organization_nav()
 
         if st.session_state["role"] == "researcher":
