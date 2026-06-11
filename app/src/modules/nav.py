@@ -17,41 +17,39 @@ def about_page_nav():
 
 # Role: Citizen
 
-def pol_strat_home_nav():
+def citizen_home_nav():
     st.sidebar.page_link(
         "pages/00_Citizen_Home.py", label="Citizen Home", icon="🏠"
     )
 
 
-def world_bank_viz_nav():
+def shaping_eu__nav():
     st.sidebar.page_link(
         "pages/01_Shaping_EU.py", label="Shaping EU Policies", icon="🇪🇺"
     )
 
 
-def map_demo_nav():
+def explore_organization_nav():
     st.sidebar.page_link("pages/02_Explore.py", label="Explore Facts", icon="🔎️")
 
 
 # Role: Poly-Sci Researcher
 
-def usaid_worker_home_nav():
+def researcher_home_nav():
     st.sidebar.page_link(
         "pages/10_Polysci_Home.py", label="Researcher Home", icon="🏠"
     )
 
-def prediction_nav():
+def lobby_prediction_nav():
     st.sidebar.page_link(
         "pages/11_Prediction.py", label="ML Influence Prediction", icon="🤖"
     )
 
-def add_ngo_nav():
-    st.sidebar.page_link("pages/15_Add_Org.py", label="Add New Organization", icon="➕")
+def search_organization_nav():
+    st.sidebar.page_link("pages/15_Add_Org.py", label="Search Organizations", icon="🔍")
 
-def ngo_directory_nav():
+def compare_organization_nav():
     st.sidebar.page_link("pages/14_Org_Directory.py", label="Organization Comparison", icon="📊")
-
-
 
 
 # Role: Political Journalist
@@ -59,16 +57,16 @@ def ngo_directory_nav():
 def journalist_home_nav():
     st.sidebar.page_link("pages/20_Journalist_Home.py", label="Journalist Home", icon="🖥️")
 
-
-def ml_model_mgmt_nav():
+def party_parliament_prediction_nav():
     st.sidebar.page_link(
         "pages/21_Party_Learnings.py", label="Party Parliament Prediction", icon="🏢"
     )
 
-def new_ml_model_nav():
+def party_explore_nav():
     st.sidebar.page_link(
         "pages/22_Party_Prediction.py", label="Explore Parties", icon="🎉"
     )
+
 def party_lobbyists_nav():
     st.sidebar.page_link(
         "pages/23_Party_Lobbyists.py", label="Party Lobbyists", icon="⚖️"
@@ -94,23 +92,21 @@ def SideBarLinks(show_home=False):
 
     if st.session_state["authenticated"]:
 
-        if st.session_state["role"] == "pol_strat_advisor":
-            pol_strat_home_nav()
-            world_bank_viz_nav()
-            map_demo_nav()
+        if st.session_state["role"] == "citizen":
+            citizen_home_nav()
+            shaping_eu__nav()
+            explore_organization_nav()
 
-        if st.session_state["role"] == "usaid_worker":
-            usaid_worker_home_nav()
-            add_ngo_nav()
-            ngo_directory_nav()
-            prediction_nav()
-            # api_test_nav()
-            # classification_nav()
+        if st.session_state["role"] == "researcher":
+            researcher_home_nav()
+            lobby_prediction_nav()
+            search_organization_nav()
+            compare_organization_nav()
 
-        if st.session_state["role"] == "administrator":
+        if st.session_state["role"] == "journalist":
             journalist_home_nav()
-            ml_model_mgmt_nav()
-            new_ml_model_nav()
+            party_parliament_prediction_nav()
+            party_explore_nav()
             party_lobbyists_nav()
             
     # About link appears at the bottom for all roles
