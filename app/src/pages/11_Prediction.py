@@ -7,7 +7,6 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 import requests
-import os
 
 st.set_page_config(page_title="Meeting Prediction", layout="wide")
 
@@ -22,19 +21,24 @@ ML-predicted estimate of how many European Parliament meetings it is likely to s
 Use the scatter plot to see how the prediction compares against real organizations in the dataset.
 """)
 
-# Load lobbyfacts data for scatter plot
-@st.cache_data
-def load_lobbyfacts():
-    paths = [
-        os.path.join(os.path.dirname(__file__), '..', 'lobbyfacts_with_p.csv'),
-        os.path.join(os.path.dirname(__file__), '..', 'datasets', 'lobbying', 'lobbyfacts_merged.csv'),
-    ]
-    for p in paths:
-        if os.path.exists(p):
-            return pd.read_csv(p)
+API_BASE = "http://web-api:4000"
+
+@st.cache_data(ttl=300)
+def load_orgs_for_plot():
+    try:
+        resp = requests.get(f"{API_BASE}/organizations",
+                            params={"min_cost": 1, "limit": 2000}, timeout=10)
+        if resp.status_code == 200:
+            data = resp.json()
+            df = pd.DataFrame(data)[["name", "lobbying_cost", "ep_meetings"]].dropna()
+            df = df[(df["lobbying_cost"] > 0) & (df["ep_meetings"] > 0)]
+            df = df.rename(columns={"name": "name", "lobbying_cost": "lobbying_cost", "ep_meetings": "meetings"})
+            return df
+    except Exception:
+        pass
     return None
 
-df_lobbyfacts = load_lobbyfacts()
+df_lobbyfacts = load_orgs_for_plot()
 
 # Session state
 if "saved_comparisons" not in st.session_state:
@@ -158,18 +162,7 @@ if st.session_state.prediction_result is not None:
     st.subheader("How does your organization compare?")
 
     if df_lobbyfacts is not None:
-        df_plot = df_lobbyfacts[
-            (df_lobbyfacts['Lobbying cost'] > 0) &
-            (df_lobbyfacts['Meetings'] > 0)
-        ].copy()
-
-        df_plot = df_plot.rename(columns={
-            'Lobbying cost': 'lobbying_cost',
-            'Meetings': 'meetings',
-            'Name': 'name',
-        })
-
-        df_plot = df_plot[['name', 'lobbying_cost', 'meetings']].dropna()
+        df_plot = df_lobbyfacts.copy()
 
         fig = px.scatter(
             df_plot,
@@ -205,10 +198,18 @@ if st.session_state.prediction_result is not None:
         st.subheader("Similar organizations")
         st.write("Save any of these to compare on the Organization Comparison page.")
 
-        similar = df_plot[
-            (df_plot['lobbying_cost'] > inputs['lobbying_cost'] * 0.5) &
-            (df_plot['lobbying_cost'] < inputs['lobbying_cost'] * 2.0)
-        ].head(5)
+        try:
+            sim_resp = requests.get(f"{API_BASE}/organizations", params={
+                "min_cost": inputs['lobbying_cost'] * 0.5,
+                "max_cost": inputs['lobbying_cost'] * 2.0,
+                "limit": 5,
+            }, timeout=5)
+            sim_data = sim_resp.json() if sim_resp.status_code == 200 else []
+            similar = pd.DataFrame(sim_data)[["name", "lobbying_cost", "ep_meetings"]].dropna().rename(
+                columns={"ep_meetings": "meetings"}
+            ) if sim_data else pd.DataFrame()
+        except Exception:
+            similar = pd.DataFrame()
 
         if similar.empty:
             st.info("No similar organizations found in this cost range.")

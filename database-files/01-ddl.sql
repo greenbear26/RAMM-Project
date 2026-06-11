@@ -47,9 +47,12 @@ CREATE TABLE IF NOT EXISTS lobby_model_weights (
 );
 
 CREATE TABLE IF NOT EXISTS lobby_model_scaler (
-    sequence_number INT,
+    model_id        INTEGER  NOT NULL,
+    sequence_number INT      NOT NULL,
     feature_means   TEXT,
-    feature_stds    TEXT
+    feature_stds    TEXT,
+    PRIMARY KEY (model_id, sequence_number),
+    FOREIGN KEY (model_id) REFERENCES lobby_model_weights(model_id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS party_model_weights (
@@ -58,9 +61,12 @@ CREATE TABLE IF NOT EXISTS party_model_weights (
 );
 
 CREATE TABLE IF NOT EXISTS party_model_scaler (
-    sequence_number INT,
+    model_id        INTEGER  NOT NULL,
+    sequence_number INT      NOT NULL,
     feature_means   TEXT,
-    feature_stds    TEXT
+    feature_stds    TEXT,
+    PRIMARY KEY (model_id, sequence_number),
+    FOREIGN KEY (model_id) REFERENCES party_model_weights(model_id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS party_info (

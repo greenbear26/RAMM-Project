@@ -65,6 +65,30 @@ def get_all_organizations():
         return error_response(str(e))
 
 
+# Route 1b — GET /organizations/random
+@organizations_bp.route("/organizations/random", methods=["GET"])
+def get_random_organizations():
+    current_app.logger.info("GET /organizations/random")
+    try:
+        n = min(int(request.args.get("n", 10)), 50)
+        with get_db().cursor(dictionary=True) as cursor:
+            cursor.execute(
+                """SELECT org_id, name, lobbying_cost, country_name,
+                          ep_meetings, all_ep_passes
+                   FROM lobbying_organization
+                   WHERE lobbying_cost IS NOT NULL
+                     AND country_name  IS NOT NULL
+                   ORDER BY RAND()
+                   LIMIT %s""",
+                (n,)
+            )
+            orgs = cursor.fetchall()
+        return jsonify(orgs), 200
+    except Error as e:
+        current_app.logger.error(f"Database error in get_random_organizations: {e}")
+        return error_response(str(e))
+
+
 # Route 2 — GET /organizations/summary
 @organizations_bp.route("/organizations/summary", methods=["GET"])
 def get_organizations_summary():
