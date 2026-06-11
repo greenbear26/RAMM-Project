@@ -34,10 +34,9 @@ def load_users(filepath):
     df = pd.read_csv(filepath)
     return [f"{row['first_name']} {row['last_name']}" for _, row in df.iterrows()]
 
-citizen_options    = sorted(load_users(os.path.join(BASE_DIR, 'Mock_data', 'Citizen_DATA.csv')))
-researcher_options = sorted(load_users(os.path.join(BASE_DIR, 'Mock_data', 'PolySci_DATA.csv')))
-journalist_options = sorted(load_users(os.path.join(BASE_DIR, 'Mock_data', 'Journalist_DATA.csv')))
-
+citizen_options    = sorted(load_users(os.path.join(BASE_DIR, 'Mock_data', 'Citizen_DATA.csv')),    key=lambda name: name.split()[-1])
+researcher_options = sorted(load_users(os.path.join(BASE_DIR, 'Mock_data', 'PolySci_DATA.csv')),    key=lambda name: name.split()[-1])
+journalist_options = sorted(load_users(os.path.join(BASE_DIR, 'Mock_data', 'Journalist_DATA.csv')), key=lambda name: name.split()[-1])
 # Hero section
 st.markdown(f"""
 <div style="
