@@ -6,6 +6,7 @@ import requests
 import pandas as pd
 import plotly.graph_objects as go
 from modules.nav import SideBarLinks
+import ast
 
 st.set_page_config(page_title="Organization Comparison", page_icon="📊", layout='wide')
 
@@ -18,7 +19,7 @@ st.markdown("""
 Select two saved organizations to compare them side by side. View lobbying spend, EP meeting
 counts, and ML-predicted influence scores in charts, then drill into policy area overlap and
 lobbying efficiency to understand how each organization stacks up.
-Save organizations first from the **Add Organization** page.
+Save organizations first from the **Search Organizations** page.
 """)
 
 if "saved_orgs" not in st.session_state:
@@ -93,7 +94,7 @@ with main_col:
 
     with tab1:
         if len(st.session_state.compare_pair) == 0:
-            st.info("Use the **Add Organization** page to save orgs, then select 2 from the right column to compare.")
+            st.info("Use the **Search Organizations** page to save orgs, then select 2 from the right column to compare.")
 
         elif len(st.session_state.compare_pair) == 1:
             st.info("Select one more org from your saved list on the right to compare.")
@@ -103,14 +104,16 @@ with main_col:
             org2 = st.session_state.compare_pair[1]
 
             # ── Fetch all data up front so we can build cross-org charts ──────
+            pair_data = []
             for org in [org1, org2]:
                 org_id = org.get("org_id")
-                details, ml = org.copy(), {}
+                details = org.copy()
                 if org_id:
                     try:
                         r = requests.get(f"http://web-api:4000/organizations/{org_id}")
                         if r.status_code == 200:
                             details = r.json()
+                        pair_data.append({"details": details})
                     except Exception:
                         pass
 
@@ -122,17 +125,17 @@ with main_col:
             st.markdown("### At a Glance")
             spend1  = d1["details"].get("lobbying_cost") or 0
             spend2  = d2["details"].get("lobbying_cost") or 0
-            meet1   = d1["details"].get("meetings") or 0
-            meet2   = d2["details"].get("meetings") or 0
-            score1  = d1["ml"].get("influence_score") or 0
-            score2  = d2["ml"].get("influence_score") or 0
+            members1 = d1["details"].get("members_fte") or 0
+            members2 = d2["details"].get("members_fte") or 0
+            meet1   = d1["details"].get("ep_meetings") or 0
+            meet2   = d2["details"].get("ep_meetings") or 0
 
             fig_bar = go.Figure(data=[
-                go.Bar(name=name1, x=["Lobbying Spend (€M)", "EP Meetings", "ML Score"],
-                       y=[spend1 / 1_000_000, meet1, score1],
+                go.Bar(name=name1, x=["Lobbying Spend (€M)", "EP Meetings", "Full-time Employees"],
+                       y=[spend1 / 1_000_000, meet1, members1],
                        marker_color="#2563EB"),
-                go.Bar(name=name2, x=["Lobbying Spend (€M)", "EP Meetings", "ML Score"],
-                       y=[spend2 / 1_000_000, meet2, score2],
+                go.Bar(name=name2, x=["Lobbying Spend (€M)", "EP Meetings", "Full-time Employees"],
+                       y=[spend2 / 1_000_000, meet2, members2],
                        marker_color="#F59E0B"),
             ])
             fig_bar.update_layout(
@@ -150,56 +153,32 @@ with main_col:
             # Chart 3: Policy area overlap 
             st.markdown("### Policy Area Overlap")
 
+            areas1 =  set(ast.literal_eval(d1["details"].get("policy_areas")))
+            areas2 =  set(ast.literal_eval(d2["details"].get("policy_areas")))
             
             shared    = sorted(areas1 & areas2)
-            only1     = sorted(areas1 - areas2)
-            only2     = sorted(areas2 - areas1)
 
-            oc1, oc2, oc3 = st.columns(3)
+            oc1, oc2 = st.columns(2)
             with oc1:
-                st.markdown(f"**{name1[:20]} only** ({len(only1)})")
-                for a in only1:
+                st.markdown(f"**{name1[:20]}** ({len(areas1)})")
+                for a in areas1:
+                    # if a in shared:
+                    #     st.markdown(f"- **{a}**")
+                    # else:
                     st.markdown(f"- {a}")
-                if not only1:
+                if not areas1:
                     st.caption("—")
             with oc2:
-                st.markdown(f"**Shared** ({len(shared)})")
-                for a in shared:
+                st.markdown(f"**{name2[:20]}** ({len(areas2)})")
+                for a in areas2:
+                    # if a in shared:
+                    #     st.markdown(f"- **{a}**")
+                    # else:
                     st.markdown(f"- {a}")
-                if not shared:
-                    st.caption("No overlap")
-            with oc3:
-                st.markdown(f"**{name2[:20]} only** ({len(only2)})")
-                for a in only2:
-                    st.markdown(f"- {a}")
-                if not only2:
+                if not areas2:
                     st.caption("—")
-
-            # Policy area coverage grouped bar
-            all_areas = sorted(areas1 | areas2)
-            if all_areas:
-                df_overlap = pd.DataFrame({
-                    "Policy Area": all_areas,
-                    name1[:20]: [1 if a in areas1 else 0 for a in all_areas],
-                    name2[:20]: [1 if a in areas2 else 0 for a in all_areas],
-                })
-                fig_overlap = go.Figure(data=[
-                    go.Bar(name=name1[:20], x=df_overlap["Policy Area"],
-                           y=df_overlap[name1[:20]], marker_color="#2563EB"),
-                    go.Bar(name=name2[:20], x=df_overlap["Policy Area"],
-                           y=df_overlap[name2[:20]], marker_color="#F59E0B"),
-                ])
-                fig_overlap.update_layout(
-                    barmode="group",
-                    height=280,
-                    margin=dict(t=10, b=80),
-                    yaxis=dict(tickvals=[0, 1], ticktext=["No", "Yes"], title="Active"),
-                    xaxis_tickangle=-35,
-                    plot_bgcolor="rgba(0,0,0,0)",
-                    paper_bgcolor="rgba(0,0,0,0)",
-                    legend=dict(orientation="h", yanchor="bottom", y=1.02),
-                )
-                st.plotly_chart(fig_overlap, use_container_width=True)
+            
+            st.markdown(f"**Shared policy areas ({len(shared)})**: {', '.join(shared) if shared else '—'}")
 
             st.divider()
 

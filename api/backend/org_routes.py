@@ -21,7 +21,7 @@ def get_all_organizations():
         min_cost    = request.args.get("min_cost")
         max_cost    = request.args.get("max_cost")
         name        = request.args.get("name")
-        limit       = int(request.args.get("limit", 50))
+        limit       = int(request.args.get("limit", 1000))
  
         query  = """
             SELECT DISTINCT org_id, name, members_fte,
@@ -211,212 +211,7 @@ def get_org_influence_prediction(org_id):
         return error_response(str(e))
 
 
-# Route 6 — GET /organizations/<org_id>/meetings
-@organizations_bp.route("/organizations/<int:org_id>/meetings", methods=["GET"])
-def get_org_meetings(org_id):
-    current_app.logger.info(f"GET /organizations/{org_id}/meetings")
-    try:
-        with get_db().cursor(dictionary=True) as cursor:
-            cursor.execute("SELECT org_id FROM organization WHERE org_id = %s", (org_id,))
-            if not cursor.fetchone():
-                return error_response("Organization not found", 404)
-
-            cursor.execute("""
-                SELECT meeting_id, eu_body, meeting_date, subject, attendees_count, source
-                FROM meeting
-                WHERE org_id = %s
-                ORDER BY meeting_date DESC
-            """, (org_id,))
-            meetings = cursor.fetchall()
-        return jsonify(meetings), 200
-    except Error as e:
-        current_app.logger.error(f"Database error in get_org_meetings: {e}")
-        return error_response(str(e))
-
-
-# Route 7 — POST /meetings
-@organizations_bp.route("/meetings", methods=["POST"])
-def create_meeting():
-    current_app.logger.info("POST /meetings")
-    try:
-        data = request.get_json()
-        if "org_id" not in data:
-            return error_response("Missing required field: org_id", 400)
-
-        with get_db().cursor(dictionary=True) as cursor:
-            cursor.execute("SELECT org_id FROM organization WHERE org_id = %s", (data["org_id"],))
-            if not cursor.fetchone():
-                return error_response("Organization not found", 404)
-
-            cursor.execute("""
-                INSERT INTO meeting (org_id, eu_body, meeting_date, subject, attendees_count, source)
-                VALUES (%s, %s, %s, %s, %s, %s)
-            """, (
-                data["org_id"],
-                data.get("eu_body"),
-                data.get("meeting_date"),
-                data.get("subject"),
-                data.get("attendees_count"),
-                data.get("source"),
-            ))
-            new_id = cursor.lastrowid
-
-        get_db().commit()
-        return jsonify({"message": "Meeting created successfully", "meeting_id": new_id}), 201
-    except Error as e:
-        current_app.logger.error(f"Database error in create_meeting: {e}")
-        return error_response(str(e))
-
-
-# Route 8 — GET /organizations/<org_id>/access-passes
-@organizations_bp.route("/organizations/<int:org_id>/access-passes", methods=["GET"])
-def get_org_access_passes(org_id):
-    current_app.logger.info(f"GET /organizations/{org_id}/access-passes")
-    try:
-        with get_db().cursor(dictionary=True) as cursor:
-            cursor.execute("SELECT org_id FROM organization WHERE org_id = %s", (org_id,))
-            if not cursor.fetchone():
-                return error_response("Organization not found", 404)
-
-            cursor.execute("""
-                SELECT pass_id, person_name, role_title, eu_body, issue_date, expiry_date, source
-                FROM access_pass
-                WHERE org_id = %s
-                ORDER BY issue_date DESC
-            """, (org_id,))
-            passes = cursor.fetchall()
-            total = len(passes)
-
-        return jsonify({"total": total, "passes": passes}), 200
-    except Error as e:
-        current_app.logger.error(f"Database error in get_org_access_passes: {e}")
-        return error_response(str(e))
-
-
-# Route 9 — GET /organizations/<org_id>/expenditures
-@organizations_bp.route("/organizations/<int:org_id>/expenditures", methods=["GET"])
-def get_org_expenditures(org_id):
-    current_app.logger.info(f"GET /organizations/{org_id}/expenditures")
-    try:
-        with get_db().cursor(dictionary=True) as cursor:
-            cursor.execute("SELECT org_id FROM organization WHERE org_id = %s", (org_id,))
-            if not cursor.fetchone():
-                return error_response("Organization not found", 404)
-
-            cursor.execute("""
-                SELECT expenditure_id, year, amount_eur, amount_range_min_eur,
-                       amount_range_max_eur, currency, source
-                FROM expenditure_record
-                WHERE org_id = %s
-                ORDER BY year DESC
-            """, (org_id,))
-            expenditures = cursor.fetchall()
-
-        return jsonify(expenditures), 200
-    except Error as e:
-        current_app.logger.error(f"Database error in get_org_expenditures: {e}")
-        return error_response(str(e))
-
-
-# Route 10 — POST /organizations/<org_id>/expenditures
-@organizations_bp.route("/organizations/<int:org_id>/expenditures", methods=["POST"])
-def create_expenditure(org_id):
-    current_app.logger.info(f"POST /organizations/{org_id}/expenditures")
-    try:
-        data = request.get_json()
-        if "year" not in data or "amount_eur" not in data:
-            return error_response("Missing required fields: year, amount_eur", 400)
-
-        with get_db().cursor(dictionary=True) as cursor:
-            cursor.execute("SELECT org_id FROM organization WHERE org_id = %s", (org_id,))
-            if not cursor.fetchone():
-                return error_response("Organization not found", 404)
-
-            cursor.execute("""
-                INSERT INTO expenditure_record
-                    (org_id, year, amount_eur, amount_range_min_eur, amount_range_max_eur, currency, source)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
-            """, (
-                org_id,
-                data["year"],
-                data["amount_eur"],
-                data.get("amount_range_min_eur"),
-                data.get("amount_range_max_eur"),
-                data.get("currency", "EUR"),
-                data.get("source"),
-            ))
-            new_id = cursor.lastrowid
-
-        get_db().commit()
-        return jsonify({"message": "Expenditure record created", "expenditure_id": new_id}), 201
-    except Error as e:
-        current_app.logger.error(f"Database error in create_expenditure: {e}")
-        return error_response(str(e))
-
-
-# Route 11 — DELETE /expenditures/<expenditure_id>
-@organizations_bp.route("/expenditures/<int:expenditure_id>", methods=["DELETE"])
-def delete_expenditure(expenditure_id):
-    current_app.logger.info(f"DELETE /expenditures/{expenditure_id}")
-    try:
-        with get_db().cursor(dictionary=True) as cursor:
-            cursor.execute(
-                "SELECT expenditure_id FROM expenditure_record WHERE expenditure_id = %s",
-                (expenditure_id,)
-            )
-            if not cursor.fetchone():
-                return error_response("Expenditure record not found", 404)
-            cursor.execute(
-                "DELETE FROM expenditure_record WHERE expenditure_id = %s", (expenditure_id,)
-            )
-        get_db().commit()
-        return jsonify({"message": "Expenditure record deleted"}), 200
-    except Error as e:
-        current_app.logger.error(f"Database error in delete_expenditure: {e}")
-        return error_response(str(e))
-
-
-# Route 12 — GET /lobbying-activities
-@organizations_bp.route("/lobbying-activities", methods=["GET"])
-def get_lobbying_activities():
-    current_app.logger.info("GET /lobbying-activities")
-    try:
-        org_id      = request.args.get("org_id")
-        policy_area = request.args.get("policy_area")
-        limit       = min(int(request.args.get("limit", 100)), 500)
-
-        query = """
-            SELECT la.activity_id, la.org_id, o.name AS org_name,
-                   la.activity_type, la.eu_institution, la.start_date,
-                   pa.name AS policy_area
-            FROM lobbying_activity la
-            JOIN organization o ON la.org_id = o.org_id
-            LEFT JOIN policy_area pa ON la.policy_area_id = pa.policy_area_id
-            WHERE 1=1
-        """
-        params = []
-
-        if org_id:
-            query += " AND la.org_id = %s"
-            params.append(int(org_id))
-        if policy_area:
-            query += " AND pa.name = %s"
-            params.append(policy_area)
-
-        query += " ORDER BY la.start_date DESC LIMIT %s"
-        params.append(limit)
-
-        with get_db().cursor(dictionary=True) as cursor:
-            cursor.execute(query, params)
-            activities = cursor.fetchall()
-
-        return jsonify(activities), 200
-    except Error as e:
-        current_app.logger.error(f"Database error in get_lobbying_activities: {e}")
-        return error_response(str(e))
-
-
-# Route 13 — POST /organizations
+# Route 6 — POST /organizations
 @organizations_bp.route("/organizations", methods=["POST"])
 def create_organization():
     current_app.logger.info("POST /organizations")
@@ -455,7 +250,7 @@ def create_organization():
         return error_response(str(e))
 
 
-# Route 14 — PUT /organizations/<org_id>
+# Route 7 — PUT /organizations/<org_id>
 @organizations_bp.route("/organizations/<int:org_id>", methods=["PUT"])
 def update_organization(org_id):
     current_app.logger.info(f"PUT /organizations/{org_id}")
@@ -490,7 +285,7 @@ def update_organization(org_id):
         return error_response(str(e))
 
 
-# Route 15 — DELETE /organizations/<org_id>
+# Route 8 — DELETE /organizations/<org_id>
 @organizations_bp.route("/organizations/<int:org_id>", methods=["DELETE"])
 def delete_organization(org_id):
     current_app.logger.info(f"DELETE /organizations/{org_id}")
@@ -509,7 +304,7 @@ def delete_organization(org_id):
         return error_response(str(e))
 
 
-# Route 16 — GET /policy-areas
+# Route 9 — GET /policy-areas
 @organizations_bp.route("/policy-areas", methods=["GET"])
 def get_policy_areas():
     current_app.logger.info("GET /policy-areas")
