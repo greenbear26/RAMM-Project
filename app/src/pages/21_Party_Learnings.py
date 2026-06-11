@@ -2,6 +2,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 import streamlit as st
+import pandas as pd
 import requests
 from modules.nav import SideBarLinks
 
@@ -121,8 +122,25 @@ if st.button("Search", type="primary", use_container_width=True):
                 "Eurosceptic":   bool(p.get("eurosceptic")),
                 "In Parliament": bool(p.get("in_parliament")),
             } for p in results]
-            st.dataframe(table, use_container_width=True)
 
+            df_all = pd.DataFrame(table)
+
+            countries_in_results = df_all["Country"].dropna().unique().tolist()
+            if len(countries_in_results) > 1:
+                tabs = st.tabs(countries_in_results)
+                for tab, country in zip(tabs, countries_in_results):
+                    with tab:
+                        df_country = df_all[df_all["Country"] == country].drop(columns=["Country"])
+                        st.dataframe(df_country, use_container_width=True, hide_index=True)
+            else:
+                st.dataframe(table, use_container_width=True, hide_index=True)
+
+            st.download_button(
+                label="⬇ Download parties as CSV",
+                data=df_all.to_csv(index=False),
+                file_name="eu_parties.csv",
+                mime="text/csv",
+            )
         st.markdown("---")
         st.markdown("### Lobby Activity by EP Party")
 
@@ -136,3 +154,10 @@ if st.button("Search", type="primary", use_container_width=True):
                 "Total Meetings": i.get("total_meetings"),
             } for i in lobby_results]
             st.dataframe(lobby_table, use_container_width=True)
+            df_lobby = pd.DataFrame(lobby_table)
+            st.download_button(
+                label="⬇ Download lobby activity as CSV",
+                data=df_lobby.to_csv(index=False),
+                file_name="lobby_activity.csv",
+                mime="text/csv",
+            )

@@ -2,6 +2,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 import streamlit as st
+import pandas as pd
 import requests
 import pandas as pd
 from modules.nav import SideBarLinks
@@ -63,7 +64,6 @@ st.markdown("---")
 
 
 def fetch_orgs(policies, countries):
-    """Query the API for each policy/country combo and merge unique results."""
     policy_list  = policies  if policies  else [None]
     country_list = countries if countries else [None]
 
@@ -77,7 +77,7 @@ def fetch_orgs(policies, countries):
                 resp = requests.get(f"{API_BASE}/organizations", params=params)
                 if resp.status_code == 200:
                     for org in resp.json():
-                        seen[org["org_id"]] = org   # dedupe by org_id
+                        seen[org["org_id"]] = org
             except requests.exceptions.ConnectionError:
                 st.warning("⚠️ Backend not connected.")
                 return []
@@ -101,19 +101,22 @@ if st.button("Search", type="primary", use_container_width=True):
                 "Interest represented": o.get("interest_represented"),
                 "Country":              o.get("country_name"),
             } for o in results]
-        st.session_state.org_results_table = table
-        st.markdown(f"### Results: {len(results)} organizations found")
-        if not results:
-            st.info("No organizations found. Try different filters.")
-        else:
-            st.dataframe(table, use_container_width=True)
 
-if st.session_state.org_results_table:
-    csv = pd.DataFrame(st.session_state.org_results_table).to_csv(index=False)
-    st.download_button(
-        label="Download Organizations (CSV)",
-        data=csv,
-        file_name="lobbylens_organizations.csv",
-        mime="text/csv",
-        use_container_width=True,
-    )
+            df_all = pd.DataFrame(table)
+
+            countries_in_results = df_all["Country"].dropna().unique().tolist()
+            if len(countries_in_results) > 1:
+                tabs = st.tabs(countries_in_results)
+                for tab, country in zip(tabs, countries_in_results):
+                    with tab:
+                        df_country = df_all[df_all["Country"] == country].drop(columns=["Country"])
+                        st.dataframe(df_country, use_container_width=True, hide_index=True)
+            else:
+                st.dataframe(table, use_container_width=True, hide_index=True)
+
+            st.download_button(
+                label="⬇ Download organizations as CSV",
+                data=df_all.to_csv(index=False),
+                file_name="eu_organizations.csv",
+                mime="text/csv",
+            )
