@@ -85,8 +85,6 @@ c1, c2, c3 = st.columns(3)
 with c1:
     st.markdown(f'<div style="{CARD_STYLE}"><h3 style="color:#FFFFFF; margin:0 0 4px 0; font-size:15px; font-weight:700;">European Citizen</h3><p style="color:#94A3B8; font-size:11px; line-height:1.5; margin:0;">Explore who funds EU lobbying and which policy areas are most contested.</p></div>', unsafe_allow_html=True)
     selected_citizen = st.selectbox("Select citizen", citizen_options, key="citizen_select", label_visibility="collapsed")
-    st.markdown(f'<div style="{CARD_STYLE}"><h3 style="color:#FFFFFF; margin:0 0 6px 0; font-size:16px; font-weight:700;">European Citizen</h3><p style="color:#94A3B8; font-size:12px; line-height:1.6; margin:0;">Explore which organizations are shaping EU policy in your country. Understand who funds political lobbying and which policy areas are most contested.</p></div>', unsafe_allow_html=True)
-    selected_citizen = st.selectbox("Select citizen", citizen_options, key="citizen_select", label_visibility="collapsed")
     if st.button("Login as Citizen", key="citizen_login", type="primary", use_container_width=True):
         st.session_state['authenticated'] = True
         st.session_state['role'] = 'pol_strat_advisor'
@@ -98,8 +96,6 @@ with c1:
 with c2:
     st.markdown(f'<div style="{CARD_STYLE}"><h3 style="color:#FFFFFF; margin:0 0 4px 0; font-size:15px; font-weight:700;">Political Science Researcher</h3><p style="color:#94A3B8; font-size:11px; line-height:1.5; margin:0;">Compare lobbying organizations, run ML predictions, and analyse spending patterns.</p></div>', unsafe_allow_html=True)
     selected_researcher = st.selectbox("Select researcher", researcher_options, key="researcher_select", label_visibility="collapsed")
-    st.markdown(f'<div style="{CARD_STYLE}"><h3 style="color:#FFFFFF; margin:0 0 6px 0; font-size:16px; font-weight:700;">Political Science Researcher</h3><p style="color:#94A3B8; font-size:12px; line-height:1.6; margin:0;">Compare lobbying organizations side by side, run ML influence predictions, and analyse spending patterns across policy areas and EU institutions.</p></div>', unsafe_allow_html=True)
-    selected_researcher = st.selectbox("Select researcher", researcher_options, key="researcher_select", label_visibility="collapsed")
     if st.button("Login as Researcher", key="researcher_login", type="primary", use_container_width=True):
         st.session_state['authenticated'] = True
         st.session_state['role'] = 'usaid_worker'
@@ -110,8 +106,6 @@ with c2:
 
 with c3:
     st.markdown(f'<div style="{CARD_STYLE}"><h3 style="color:#FFFFFF; margin:0 0 4px 0; font-size:15px; font-weight:700;">Political Party Journalist</h3><p style="color:#94A3B8; font-size:11px; line-height:1.5; margin:0;">Profile EU parties, predict parliament outcomes, and track populist movements.</p></div>', unsafe_allow_html=True)
-    selected_journalist = st.selectbox("Select journalist", journalist_options, key="journalist_select", label_visibility="collapsed")
-    st.markdown(f'<div style="{CARD_STYLE}"><h3 style="color:#FFFFFF; margin:0 0 6px 0; font-size:16px; font-weight:700;">Political Party Journalist</h3><p style="color:#94A3B8; font-size:12px; line-height:1.6; margin:0;">Predict parliament seat outcomes, profile political parties across EU member states, and track how populist and far-right movements influence EU policy.</p></div>', unsafe_allow_html=True)
     selected_journalist = st.selectbox("Select journalist", journalist_options, key="journalist_select", label_visibility="collapsed")
     if st.button("Login as Journalist", key="journalist_login", type="primary", use_container_width=True):
         st.session_state['authenticated'] = True
