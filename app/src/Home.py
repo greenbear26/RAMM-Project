@@ -34,11 +34,10 @@ def load_users(filepath):
     df = pd.read_csv(filepath)
     return [f"{row['first_name']} {row['last_name']}" for _, row in df.iterrows()]
 
-citizen_options    = load_users(os.path.join(BASE_DIR, 'Mock_data', 'Citizen_DATA.csv'))
-researcher_options = load_users(os.path.join(BASE_DIR, 'Mock_data', 'PolySci_DATA.csv'))
-journalist_options = load_users(os.path.join(BASE_DIR, 'Mock_data', 'Journalist_DATA.csv'))
-
-# Hero section 
+citizen_options    = sorted(load_users(os.path.join(BASE_DIR, 'Mock_data', 'Citizen_DATA.csv')),    key=lambda name: name.split()[-1])
+researcher_options = sorted(load_users(os.path.join(BASE_DIR, 'Mock_data', 'PolySci_DATA.csv')),    key=lambda name: name.split()[-1])
+journalist_options = sorted(load_users(os.path.join(BASE_DIR, 'Mock_data', 'Journalist_DATA.csv')), key=lambda name: name.split()[-1])
+# Hero section
 st.markdown(f"""
 <div style="
     background: linear-gradient(135deg, #0F172A 0%, #1E3A5F 60%, #1a4a7a 100%);
@@ -82,7 +81,7 @@ height: 155px;
 overflow: hidden;
 """
 
-# Citizen card 
+# Citizen card
 with c1:
     st.markdown(f"""
     <div style="{CARD_STYLE}">
@@ -103,7 +102,7 @@ with c1:
         logger.info(f"Logging in as Citizen: {selected_citizen}")
         st.switch_page('pages/00_Citizen_Home.py')
 
-# ── Researcher card ───────────────────────────────────────────────────────────
+# Researcher card
 with c2:
     st.markdown(f"""
     <div style="{CARD_STYLE}">
@@ -145,7 +144,7 @@ with c3:
         logger.info(f"Logging in as Journalist: {selected_journalist}")
         st.switch_page('pages/20_Journalist_Home.py')
 
-# Footer 
+# Footer
 st.markdown("""
 <div style="margin-top: 40px; text-align: center; color: #475569; font-size: 12px;">
     LobbyLens &nbsp;·&nbsp; EU Lobbying Transparency Platform &nbsp;·&nbsp;
