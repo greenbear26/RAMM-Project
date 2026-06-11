@@ -61,29 +61,6 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# Stats bar
-s1, s2, s3, s4 = st.columns(4)
-for col, icon, value, label in [
-    (s1, "🏢", "5,000+",  "Organizations Tracked"),
-    (s2, "🇪🇺", "27",      "EU Member States"),
-    (s3, "📋", "8",       "Policy Areas"),
-    (s4, "📊", "ML",      "Influence Scoring"),
-]:
-    col.markdown(f"""
-    <div style="
-        background: #1E293B;
-        border: 1px solid #334155;
-        border-radius: 12px;
-        padding: 20px 16px;
-        text-align: center;
-        margin-bottom: 24px;
-    ">
-        <div style="font-size: 28px; margin-bottom: 6px;">{icon}</div>
-        <div style="color: #60A5FA; font-size: 26px; font-weight: 800; margin-bottom: 4px;">{value}</div>
-        <div style="color: #94A3B8; font-size: 13px; font-weight: 500;">{label}</div>
-    </div>
-    """, unsafe_allow_html=True)
-
 # Section label
 st.markdown("""
 <p style="text-align:center; color:#64748B; font-size:13px; letter-spacing:2px;
@@ -99,32 +76,21 @@ CARD_STYLE = """
 background: #1E293B;
 border: 1px solid #334155;
 border-radius: 14px;
-padding: 28px 24px 20px 24px;
+padding: 20px 20px 20px 20px;
 margin-bottom: 12px;
-height: 250px;
+height: 155px;
 overflow: hidden;
-display: flex;
-flex-direction: column;
-justify-content: space-between;
 """
 
 # Citizen card 
 with c1:
     st.markdown(f"""
     <div style="{CARD_STYLE}">
-        <div>
-            <h3 style="color:#FFFFFF; margin:0 0 8px 0; font-size:18px;">European Citizen</h3>
-            <p style="color:#94A3B8; font-size:13px; line-height:1.6; margin:0 0 16px 0;">
-                Explore which organizations are shaping EU policy in your country.
-                Understand who funds political lobbying and which policy areas are most contested.
-            </p>
-        </div>
-        <div style="display:flex; gap:6px; flex-wrap:wrap;">
-            <span style="background:#1E3A5F; color:#93C5FD; border-radius:20px;
-                         padding:3px 10px; font-size:11px; font-weight:600;">Explore</span>
-            <span style="background:#1E3A5F; color:#93C5FD; border-radius:20px;
-                         padding:3px 10px; font-size:11px; font-weight:600;">Policy Map</span>
-        </div>
+        <h3 style="color:#FFFFFF; margin:0 0 8px 0; font-size:18px;">European Citizen</h3>
+        <p style="color:#94A3B8; font-size:13px; line-height:1.6; margin:0;">
+            Explore which organizations are shaping EU policy in your country.
+            Understand who funds political lobbying and which policy areas are most contested.
+        </p>
     </div>
     """, unsafe_allow_html=True)
     selected_citizen = st.selectbox("Select citizen", citizen_options,
@@ -141,19 +107,11 @@ with c1:
 with c2:
     st.markdown(f"""
     <div style="{CARD_STYLE}">
-        <div>
-            <h3 style="color:#FFFFFF; margin:0 0 8px 0; font-size:18px;">Political Science Researcher</h3>
-            <p style="color:#94A3B8; font-size:13px; line-height:1.6; margin:0 0 16px 0;">
-                Compare lobbying organizations side by side, run ML influence predictions,
-                and analyse spending patterns across policy areas and EU institutions.
-            </p>
-        </div>
-        <div style="display:flex; gap:6px; flex-wrap:wrap;">
-            <span style="background:#14532D; color:#86EFAC; border-radius:20px;
-                         padding:3px 10px; font-size:11px; font-weight:600;">Compare Orgs</span>
-            <span style="background:#14532D; color:#86EFAC; border-radius:20px;
-                         padding:3px 10px; font-size:11px; font-weight:600;">ML Scoring</span>
-        </div>
+        <h3 style="color:#FFFFFF; margin:0 0 8px 0; font-size:18px;">Political Science Researcher</h3>
+        <p style="color:#94A3B8; font-size:13px; line-height:1.6; margin:0;">
+            Compare lobbying organizations side by side, run ML influence predictions,
+            and analyse spending patterns across policy areas and EU institutions.
+        </p>
     </div>
     """, unsafe_allow_html=True)
     selected_researcher = st.selectbox("Select researcher", researcher_options,
@@ -170,19 +128,11 @@ with c2:
 with c3:
     st.markdown(f"""
     <div style="{CARD_STYLE}">
-        <div>
-            <h3 style="color:#FFFFFF; margin:0 0 8px 0; font-size:18px;">Political Party Journalist</h3>
-            <p style="color:#94A3B8; font-size:13px; line-height:1.6; margin:0 0 16px 0;">
-                Predict parliament seat outcomes, profile political parties across EU member
-                states, and track how populist and far-right movements influence EU policy.
-            </p>
-        </div>
-        <div style="display:flex; gap:6px; flex-wrap:wrap;">
-            <span style="background:#4C1D95; color:#C4B5FD; border-radius:20px;
-                         padding:3px 10px; font-size:11px; font-weight:600;">Party Analysis</span>
-            <span style="background:#4C1D95; color:#C4B5FD; border-radius:20px;
-                         padding:3px 10px; font-size:11px; font-weight:600;">Predictions</span>
-        </div>
+        <h3 style="color:#FFFFFF; margin:0 0 8px 0; font-size:18px;">Political Party Journalist</h3>
+        <p style="color:#94A3B8; font-size:13px; line-height:1.6; margin:0;">
+            Predict parliament seat outcomes, profile political parties across EU member
+            states, and track how populist and far-right movements influence EU policy.
+        </p>
     </div>
     """, unsafe_allow_html=True)
     selected_journalist = st.selectbox("Select journalist", journalist_options,
