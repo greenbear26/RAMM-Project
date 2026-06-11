@@ -16,9 +16,8 @@ st.markdown("# Organization Comparison")
 st.sidebar.header("Researcher Home")
 
 st.markdown("""
-Select two saved organizations to compare them side by side. View lobbying spend, EP meeting
-counts, and ML-predicted influence scores in charts, then drill into policy area overlap and
-lobbying efficiency to understand how each organization stacks up.
+Select two saved organizations to compare them side by side. View lobbying spend, meeting counts,
+policy area overlap, and lobbying efficiency to understand how each organization stacks up.
 Save organizations first from the **Search Organizations** page.
 """)
 
@@ -131,11 +130,11 @@ with main_col:
             meet2   = d2["details"].get("ep_meetings") or 0
 
             fig_bar = go.Figure(data=[
-                go.Bar(name=name1, x=["Lobbying Spend (€M)", "EP Meetings", "Full-time Employees"],
-                       y=[spend1 / 1_000_000, meet1, members1],
+                go.Bar(name=name1, x=["Lobbying Spend (€)", "European Commission Meetings", "Full-time Employees"],
+                       y=[spend1, meet1, members1],
                        marker_color="#2563EB"),
-                go.Bar(name=name2, x=["Lobbying Spend (€M)", "EP Meetings", "Full-time Employees"],
-                       y=[spend2 / 1_000_000, meet2, members2],
+                go.Bar(name=name2, x=["Lobbying Spend (€)", "European Commission Meetings", "Full-time Employees"],
+                       y=[spend2, meet2, members2],
                        marker_color="#F59E0B"),
             ])
             fig_bar.update_layout(
@@ -199,18 +198,18 @@ with main_col:
                 st.markdown(f"**{name1[:30]}**")
                 st.metric("Cost per Meeting", f"€{eff1:,.0f}" if eff1 is not None else "—")
                 st.metric("Total Spend", f"€{spend1_f:,.0f}")
-                st.metric("EP Meetings", int(meet1_f) if meet1_f > 0 else "—")
+                st.metric("European Commission Meetings", int(meet1_f) if meet1_f > 0 else "—")
                 fte1 = float(d1["details"].get("members_fte") or 0)
                 if fte1 > 0:
-                    st.metric("Spend per FTE", f"€{spend1_f / fte1:,.0f}")
+                    st.metric("Spend per Employee", f"€{spend1_f / fte1:,.0f}")
             with ec2:
                 st.markdown(f"**{name2[:30]}**")
                 st.metric("Cost per Meeting", f"€{eff2:,.0f}" if eff2 is not None else "—")
                 st.metric("Total Spend", f"€{spend2_f:,.0f}")
-                st.metric("EP Meetings", int(meet2_f) if meet2_f > 0 else "—")
+                st.metric("European Commission Meetings", int(meet2_f) if meet2_f > 0 else "—")
                 fte2 = float(d2["details"].get("members_fte") or 0)
                 if fte2 > 0:
-                    st.metric("Spend per FTE", f"€{spend2_f / fte2:,.0f}")
+                    st.metric("Spend per Employee", f"€{spend2_f / fte2:,.0f}")
 
             if eff1 is not None and eff2 is not None:
                 fig_eff = go.Figure(data=[

@@ -9,8 +9,9 @@ from modules.nav import SideBarLinks
 st.set_page_config(layout='wide')
 SideBarLinks()
 
-st.markdown("# What Are EU Parties Fighting For?")
-st.write("Pick a country and EP party to see which parties are active and what they stand for.")
+st.markdown("# What Are European Party Ideologies?")
+st.write("Use this page to filter national parties in EU countries by their connection to European Parliament parties. " \
+    "Pick a country and European parliament party to see which parties are active and what they stand for.")
 
 API_BASE = "http://web-api:4000"
 
@@ -135,25 +136,5 @@ if st.button("Search", type="primary", use_container_width=True):
                 label="⬇ Download parties as CSV",
                 data=df_all.to_csv(index=False),
                 file_name="eu_parties.csv",
-                mime="text/csv",
-            )
-        st.markdown("---")
-        st.markdown("### Lobby Activity by EP Party")
-
-        lobby_results = fetch_lobby_info(selected_ep_parties)
-
-        if not lobby_results:
-            st.info("No lobby info found for selected EP parties.")
-        else:
-            lobby_table = [{
-                "EP Party":       i.get("ep_party"),
-                "Total Meetings": i.get("total_meetings"),
-            } for i in lobby_results]
-            st.dataframe(lobby_table, use_container_width=True)
-            df_lobby = pd.DataFrame(lobby_table)
-            st.download_button(
-                label="⬇ Download lobby activity as CSV",
-                data=df_lobby.to_csv(index=False),
-                file_name="lobby_activity.csv",
                 mime="text/csv",
             )
