@@ -22,4 +22,4 @@ st.caption("Search for EU lobbying topics, discover interesting facts pulled fro
 if st.button('View Explore Page',
              type='primary',
              use_container_width=True):
-    st.switch_page('pages/02_Explore.py')
+    st.switch_page('pages/02_Explore_Lobbying_Facts.py')

@@ -21,7 +21,7 @@ def get_all_organizations():
         min_cost    = request.args.get("min_cost")
         max_cost    = request.args.get("max_cost")
         name        = request.args.get("name")
-        limit       = int(request.args.get("limit", 50))
+        limit       = int(request.args.get("limit", 1000))
  
         query  = """
             SELECT DISTINCT org_id, name, members_fte,
