@@ -73,7 +73,7 @@ def party_lobbyists_nav():
     )
 # Sidebar assembly
 
-def SideBarLinks(show_home=False):
+def SideBarLinks(show_home=True):
     """
     Renders sidebar navigation links based on the logged-in user's role.
     The role is stored in st.session_state when the user logs in on Home.py.
