@@ -130,11 +130,11 @@ with main_col:
             meet2   = d2["details"].get("ep_meetings") or 0
 
             fig_bar = go.Figure(data=[
-                go.Bar(name=name1, x=["Lobbying Spend (€)", "European Commission Meetings", "Full-time Employees"],
-                       y=[spend1, meet1, members1],
+                go.Bar(name=name1, x=["Lobbying Spend (M€)", "European Commission Meetings", "Full-time Employees"],
+                       y=[spend1 / 1000000, meet1, members1],
                        marker_color="#2563EB"),
-                go.Bar(name=name2, x=["Lobbying Spend (€)", "European Commission Meetings", "Full-time Employees"],
-                       y=[spend2, meet2, members2],
+                go.Bar(name=name2, x=["Lobbying Spend (M€)", "European Commission Meetings", "Full-time Employees"],
+                       y=[spend2 / 1000000, meet2, members2],
                        marker_color="#F59E0B"),
             ])
             fig_bar.update_layout(
