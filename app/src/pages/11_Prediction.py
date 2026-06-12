@@ -207,7 +207,7 @@ if st.session_state.prediction_result is not None:
                 "limit": 5,
             }, timeout=5)
             sim_data = sim_resp.json() if sim_resp.status_code == 200 else []
-            similar = pd.DataFrame(sim_data)[["name", "lobbying_cost", "ep_meetings"]].dropna().rename(
+            similar = pd.DataFrame(sim_data)[["name", "lobbying_cost", "ep_meetings", "members_fte", "policy_areas"]].dropna().rename(
                 columns={"ep_meetings": "meetings"}
             ) if sim_data else pd.DataFrame()
         except Exception:
@@ -225,7 +225,9 @@ if st.session_state.prediction_result is not None:
                         entry = {
                             'name': row['name'],
                             'lobbying_cost': row['lobbying_cost'],
-                            'meetings': row['meetings'],
+                            'ep_meetings': row['meetings'],
+                            'members_fte': row['members_fte'],
+                            'policy_areas': row['policy_areas'],
                         }
                         existing = [o['name'] for o in st.session_state.saved_comparisons]
                         if entry['name'] not in existing:
